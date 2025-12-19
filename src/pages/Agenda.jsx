@@ -148,24 +148,46 @@ export default function Agenda() {
     }
   };
 
-  const handleSalvar = async (dados) => {
+// Dentro de Agenda.jsx
+
+const handleSalvar = async (dados) => {
+    // 1. DEBUG: Vamos ver o que tem no userData no console
+    console.log("=== DEBUG SALVAR ===");
+    console.log("UserData completo:", userData);
+
+    // Tenta pegar o ID de várias formas possíveis (Firebase usa uid, SQL usa id, etc)
+    const usuarioId = userData?.id || userData?.uid || userData?.clinicaId;
+
+    if (!usuarioId) {
+      console.error("ERRO CRÍTICO: Usuário não identificado no contexto.");
+      alert("Erro: Não foi possível identificar o usuário logado. Faça login novamente.");
+      return;
+    }
+
     const start = new Date(`${dados.data}T${dados.hora}:00`);
     const end = addHours(start, 1);
 
     if (verificarConflito(start, end, dados.id)) {
-      showToast({ message: "Este horário já está ocupado.", type: "error" });
+      alert("Este horário já está ocupado."); // Fallback simples
       return;
     }
 
     try {
       const pac = pacientes.find(p => p.id === dados.pacienteId);
+      
       const payload = {
         ...dados,
         pacienteNome: pac?.nome || 'Paciente Avulso',
         start: start.toISOString(),
         end: end.toISOString(),
-        clinicaId: idDaClinica
+        clinicaId: idDaClinica,
+        // ENVIANDO O ID COM OS DOIS NOMES PARA GARANTIR
+        userId: usuarioId, 
+        donoId: usuarioId,
+        updatedAt: new Date().toISOString()
       };
+
+      console.log("Payload sendo enviado:", payload); // Debug do envio
 
       if (dados.id) await agendaService.atualizar(dados.id, payload);
       else await agendaService.criar(payload);
@@ -173,9 +195,18 @@ export default function Agenda() {
       setModalOpen(false);
       setDadosModal(null);
       carregarDados();
-      showToast({ message: "Agenda atualizada!", type: "success" });
+      
+      // Tenta usar o Toast, se falhar usa alert
+      if (typeof showToast === 'function') {
+        showToast({ message: "Salvo com sucesso!", type: "success" });
+      } else {
+        // Fallback temporário até arrumarmos o Context
+        // alert("Agendamento salvo com sucesso!"); 
+      }
+
     } catch (error) {
-      showToast({ message: "Erro ao salvar.", type: "error" });
+      console.error("Erro no catch:", error);
+      alert("Erro ao salvar: " + (error.message || "Erro desconhecido"));
     }
   };
 

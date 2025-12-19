@@ -1,138 +1,249 @@
-// src/services/dashboardService.js - FINALIZADO: Contagem de Pacientes e Fluxo de Data Corretos
-
 import { db } from './firebaseConfig';
-import { collection, query, getDocs, orderBy, limit, where } from 'firebase/firestore';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  orderBy, 
+  limit 
+} from 'firebase/firestore';
 
 export const dashboardService = {
+  // 1. Cards de Resumo (Pacientes, Hoje, Faturamento)
+  async getResumo(idUsuario) {
+    // idUsuario deve ser o user.uid
+    console.log("🔍 [Dashboard] Buscando dados para userId:", idUsuario);
+    
+    try {
+      const hojeInicio = new Date();
+      hojeInicio.setHours(0, 0, 0, 0);
+      
+      const hojeFim = new Date();
+      hojeFim.setHours(23, 59, 59, 999);
 
-  // 1. CARDS DE RESUMO
-  getResumo: async (clinicaId) => {
-    if (!clinicaId) return { pacientes: 0, hoje: 0, faturamento: 0 };
+      // --- BUSCA PACIENTES ---
+      // IMPORTANTE: Busca por 'userId' para casar com seu banco de dados
+      const qPacientes = query(
+        collection(db, 'pacientes'), 
+        where('userId', '==', idUsuario) 
+      );
+      const snapPacientes = await getDocs(qPacientes);
+      console.log(`👤 [Dashboard] Pacientes encontrados: ${snapPacientes.size}`);
 
-    const hojeString = new Date().toISOString().split('T')[0]; // Ex: "2025-12-16"
-    const dataAtual = new Date();
-    const mesAtual = dataAtual.getMonth();
-    const anoAtual = dataAtual.getFullYear();
+      // --- BUSCA AGENDAMENTOS ---
+      const qAgendamentos = query(
+        collection(db, 'agendamentos'),
+        where('userId', '==', idUsuario)
+      );
+      const snapAgendamentos = await getDocs(qAgendamentos);
+      console.log(`📅 [Dashboard] Agendamentos encontrados: ${snapAgendamentos.size}`);
+      
+      let faturamentoTotal = 0;
+      let consultasHoje = 0;
+      let consultasTotal = 0; // Para taxa de conversão
 
-    const pacientesRef = collection(db, 'pacientes');
-    const agendamentosRef = collection(db, 'agendamentos');
-    const despesasRef = collection(db, 'despesas');
+      snapAgendamentos.forEach(doc => {
+        const data = doc.data();
+        
+        // Tratamento de Data (Timestamp ou String ISO)
+        let dataConsulta;
+        if (data.start?.toDate) {
+             dataConsulta = data.start.toDate(); 
+        } else if (data.start) {
+             dataConsulta = new Date(data.start);
+        }
 
-    // --- CORREÇÃO CRÍTICA AQUI: Usar 'userId' em vez de 'estabelecimentoId' na coleção 'pacientes' ---
-    const qPacientes = query(pacientesRef, where('userId', '==', clinicaId));
-    
-    // As outras coleções continuam usando 'userId' (o que está correto)
-    const qAgendamentos = query(agendamentosRef, where('userId', '==', clinicaId));
-    const qDespesas = query(despesasRef, where('userId', '==', clinicaId));
+        // Consultas de Hoje
+        if (dataConsulta && dataConsulta >= hojeInicio && dataConsulta <= hojeFim) {
+          consultasHoje++;
+        }
 
-    // Executa as consultas
-    const [snapPacientes, snapAgendamentos, snapDespesas] = await Promise.all([
-        getDocs(qPacientes),
-        getDocs(qAgendamentos),
-        getDocs(qDespesas)
-    ]);
+        // Taxa de Conversão (realizado/concluido)
+        if (['realizado', 'concluido'].includes(data.status?.toLowerCase())) {
+          consultasTotal++;
+        }
 
-    const totalPacientes = snapPacientes.size;
-    
-    let consultasHoje = 0;
-    let receitasMes = 0;
+        // Faturamento (Limpa "R$ 1.200,00" para float)
+        if (data.valor) {
+          const valorLimpo = String(data.valor)
+            .replace('R$', '')
+            .replace(/\./g, '') // Remove ponto de milhar
+            .replace(',', '.')  // Troca vírgula por ponto
+            .trim();
+          faturamentoTotal += parseFloat(valorLimpo) || 0;
+        }
+      });
 
-    snapAgendamentos.forEach(doc => {
-      const dados = doc.data();
-      if (dados.status === 'cancelado') return;
+      return {
+        pacientes: snapPacientes.size,
+        hoje: consultasHoje,
+        faturamento: faturamentoTotal,
+        taxaConversao: snapAgendamentos.size > 0 ? Math.round((consultasTotal / snapAgendamentos.size) * 100) : 0,
+        crescimento: { 
+          pacientes: 0, 
+          faturamento: 0, 
+          consultas: 0 
+        }
+      };
 
-      // Usa a string de data formatada para comparar agendamentos de hoje
-      if (dados.data === hojeString) {
-        consultasHoje++;
-      }
+    } catch (error) {
+      console.error("❌ [Dashboard] Erro no getResumo:", error);
+      return { pacientes: 0, hoje: 0, faturamento: 0, taxaConversao: 0 };
+    }
+  },
 
-      if (dados.data) {
-        const dataAgendamento = new Date(dados.data + 'T12:00:00');
-        if (dataAgendamento.getMonth() === mesAtual && dataAgendamento.getFullYear() === anoAtual) {
-           const valor = parseFloat(dados.valor) || 0;
-           receitasMes += valor;
-        }
-      }
-    });
+  // 2. Gráfico Financeiro (Últimos 6 meses)
+  async getGraficoFinanceiro(idUsuario) {
+    try {
+      const hoje = new Date();
+      const seisMesesAtras = new Date();
+      seisMesesAtras.setMonth(hoje.getMonth() - 5);
+      seisMesesAtras.setDate(1); 
 
-    let despesasMes = 0;
-    snapDespesas.forEach(doc => {
-        const dados = doc.data();
-        if (dados.data) {
-            const dataDespesa = new Date(dados.data + 'T12:00:00');
-            if (dataDespesa.getMonth() === mesAtual && dataDespesa.getFullYear() === anoAtual) {
-                despesasMes += (parseFloat(dados.valor) || 0);
-            }
-        }
-    });
+      // Busca simples sem ordenação para evitar erro de índice
+      const q = query(
+        collection(db, 'agendamentos'),
+        where('userId', '==', idUsuario)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      const dadosPorMes = {};
+      // Inicializa os últimos 6 meses com 0
+      for (let i = 0; i < 6; i++) {
+        const d = new Date(seisMesesAtras);
+        d.setMonth(d.getMonth() + i);
+        const mesKey = d.toLocaleDateString('pt-BR', { month: 'short' });
+        const keyFormatada = mesKey.charAt(0).toUpperCase() + mesKey.slice(1);
+        dadosPorMes[keyFormatada] = 0;
+      }
 
-    const faturamentoTotal = receitasMes - despesasMes;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        let dataConsulta;
+        if (data.start?.toDate) dataConsulta = data.start.toDate();
+        else dataConsulta = new Date(data.start);
 
-    return {
-      pacientes: totalPacientes,
-      hoje: consultasHoje,
-      faturamento: faturamentoTotal
-    };
-  },
+        // Filtra apenas os últimos 6 meses no Javascript
+        if (dataConsulta >= seisMesesAtras) {
+          const mesKey = dataConsulta.toLocaleDateString('pt-BR', { month: 'short' });
+          const keyFormatada = mesKey.charAt(0).toUpperCase() + mesKey.slice(1);
 
-  // 2. GRÁFICO FINANCEIRO
-  getGraficoFinanceiro: async (clinicaId) => {
-    if (!clinicaId) return [];
+          if (data.valor && dadosPorMes.hasOwnProperty(keyFormatada)) {
+            const valorLimpo = String(data.valor)
+              .replace('R$', '')
+              .replace(/\./g, '')
+              .replace(',', '.')
+              .trim();
+            dadosPorMes[keyFormatada] += parseFloat(valorLimpo) || 0;
+          }
+        }
+      });
 
-    const agendamentosRef = collection(db, 'agendamentos');
-    const q = query(agendamentosRef, where('userId', '==', clinicaId));
-    const snapshot = await getDocs(q);
+      return Object.entries(dadosPorMes).map(([name, total]) => ({ name, total }));
 
-    const mesesNomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const dadosPorMes = {};
-    mesesNomes.forEach(m => dadosPorMes[m] = 0);
+    } catch (error) {
+      console.error("❌ [Dashboard] Erro no gráfico:", error);
+      return [];
+    }
+  },
 
-    snapshot.forEach(doc => {
-      const dados = doc.data();
-      if (dados.data && dados.status !== 'cancelado') {
-        const data = new Date(dados.data + 'T12:00:00');
-        const nomeMes = mesesNomes[data.getMonth()];
-        const valor = parseFloat(dados.valor) || 0;
-        dadosPorMes[nomeMes] += valor;
-      }
-    });
+  // 3. Próximas Consultas
+  async getProximasConsultas(idUsuario) {
+    try {
+      const q = query(
+        collection(db, 'agendamentos'),
+        where('userId', '==', idUsuario),
+        limit(20) // Traz 20 e filtra data no front
+      );
 
-    return Object.keys(dadosPorMes).map(mes => ({
-      name: mes,
-      total: dadosPorMes[mes]
-    }));
-  },
+      const snapshot = await getDocs(q);
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      
+      const lista = snapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          let dataObj;
+          if (data.start?.toDate) dataObj = data.start.toDate();
+          else dataObj = new Date(data.start);
 
-  // 3. PRÓXIMAS CONSULTAS
-  getProximasConsultas: async (clinicaId) => {
-    if (!clinicaId) return [];
+          return {
+            id: doc.id,
+            paciente: data.pacienteNome || 'Paciente',
+            data: dataObj,
+            dataIso: dataObj.toISOString(),
+            hora: dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+            status: data.status,
+            observacoes: data.observacoes
+          };
+        })
+        .filter(item => item.data >= hoje) // Apenas futuras ou de hoje
+        .sort((a, b) => a.data - b.data)   // Ordena data crescente
+        .slice(0, 5);                      // Pega 5
 
-    const hoje = new Date().toISOString().split('T')[0];
-    const agendamentosRef = collection(db, 'agendamentos');
-    
-    const q = query(
-      agendamentosRef, 
-      where('userId', '==', clinicaId), 
-      where('data', '>=', hoje),
-      orderBy('data'), 
-      limit(5)
-    );
-    
-    try {
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => {
-          const dados = doc.data();
-          return {
-            id: doc.id,
-            paciente: dados.pacienteNome || 'Paciente',
-            data: dados.data,
-            hora: dados.hora,
-            status: dados.status
-          };
-        });
-    } catch (error) {
-        console.warn("Erro ao buscar próximas consultas (índice pendente):", error);
-        return [];
-    }
-  }
+      return lista;
+
+    } catch (error) {
+      console.error("❌ [Dashboard] Erro proximas consultas:", error);
+      return [];
+    }
+  },
+
+  // 4. Pacientes Recentes (COM FALLBACK DE SEGURANÇA)
+  async getPacientesRecentes(idUsuario) {
+    try {
+      // 1ª Tentativa: Busca Bonita (Ordenada pelo banco)
+      // Pode falhar se faltar índice ou se o paciente não tiver o campo 'createdAt'
+      const q = query(
+        collection(db, 'pacientes'),
+        where('userId', '==', idUsuario),
+        orderBy('createdAt', 'desc'),
+        limit(5)
+      );
+
+      const snapshot = await getDocs(q);
+      
+      // Se retornou dados, ótimo!
+      if (!snapshot.empty) {
+        return snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toISOString() : new Date().toISOString()
+        }));
+      }
+
+      // Se chegou aqui, ou a lista está vazia ou os pacientes antigos não têm 'createdAt' e foram ignorados pelo orderBy
+      console.warn("⚠️ [Dashboard] Lista ordenada vazia. Tentando busca sem ordenação (Fallback).");
+      throw new Error("Fallback necessário");
+
+    } catch (error) {
+      // 2ª Tentativa: Fallback (Busca tudo e ordena no Javascript)
+      try {
+        const qFallback = query(
+            collection(db, 'pacientes'),
+            where('userId', '==', idUsuario),
+            limit(10) // Limite seguro
+        );
+        const snap = await getDocs(qFallback);
+        
+        return snap.docs
+            .map(d => {
+                const data = d.data();
+                // Se não tem data de criação, usa a data atual para não quebrar
+                const dataCriacao = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+                return {
+                    id: d.id,
+                    ...data,
+                    createdAt: dataCriacao.toISOString()
+                };
+            })
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Ordena JS
+            .slice(0, 5);
+      } catch (e) {
+        console.error("❌ [Dashboard] Erro fatal em pacientes recentes:", e);
+        return [];
+      }
+    }
+  }
 };

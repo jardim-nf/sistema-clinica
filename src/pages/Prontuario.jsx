@@ -53,7 +53,6 @@ export default function ProntuarioAvancado() {
     return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
-  // Fechar menu mobile ao selecionar paciente
   const handleSelectPaciente = (paciente) => {
     setPacienteSelecionado(paciente);
     if (window.innerWidth < 1024) {
@@ -81,7 +80,6 @@ export default function ProntuarioAvancado() {
     return () => unsubscribe();
   }, [pacienteSelecionado, meuUsuarioId, clinicaId]);
 
-  // Ajustar sidebar baseado no tamanho da tela
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
@@ -169,6 +167,7 @@ export default function ProntuarioAvancado() {
         @media (max-width: 768px) {
           .ql-toolbar { padding: 8px !important; }
           .ql-toolbar .ql-formats { margin-right: 4px !important; }
+          .ql-toolbar .ql-formats button { padding: 4px !important; }
         }
       `}</style>
 
@@ -280,7 +279,7 @@ export default function ProntuarioAvancado() {
               <div className="flex-1 overflow-y-auto p-4 lg:p-8 2xl:p-12 custom-scrollbar">
                 <div className="max-content-width space-y-6 lg:space-y-8">
                   
-                  {/* Abas */}
+                  {/* Abas - SEMPRE VISÍVEL NO TOPO */}
                   <div className="flex overflow-x-auto pb-2 lg:pb-0 lg:flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 w-full shadow-sm">
                     {abas.map(a => (
                       <button 
@@ -297,15 +296,17 @@ export default function ProntuarioAvancado() {
                       >
                         <a.icon size={18} /> 
                         <span className="hidden sm:inline">{a.label}</span>
+                        <span className="sm:hidden">{a.label.charAt(0)}</span>
                       </button>
                     ))}
                   </div>
 
-                  {/* Grid Principal */}
-                  <div className="flex flex-col lg:grid lg:grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
-                    {/* Coluna Central/Editor */}
-                    <div className="lg:col-span-8 2xl:col-span-9 space-y-6 lg:space-y-8 order-2 lg:order-1">
-                      {/* Editor */}
+                  {/* Layout Responsivo - Mobile: uma coluna, Desktop: duas colunas */}
+                  <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-10">
+                    
+                    {/* ÁREA PRINCIPAL DO EDITOR (Mobile: em cima, Desktop: esquerda) */}
+                    <div className="lg:col-span-8 2xl:col-span-9 space-y-6 lg:space-y-8">
+                      {/* Editor Principal */}
                       <div className="bg-white p-4 sm:p-6 lg:p-10 rounded-3xl lg:rounded-[2.5rem] border border-slate-100 shadow-sm min-h-[500px]">
                         {abaAtiva === 'evolucao' && (
                           <input 
@@ -337,7 +338,7 @@ export default function ProntuarioAvancado() {
                         </div>
                       </div>
                       
-                      {/* Templates e Checklists */}
+                      {/* Templates e Checklists - Mobile: após o editor */}
                       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
                         <TemplateManager 
                           templates={listaTemplates} 
@@ -358,21 +359,66 @@ export default function ProntuarioAvancado() {
                           }} 
                         />
                       </div>
+
+                      {/* HISTÓRICO - VISÍVEL APENAS EM MOBILE (depois de tudo) */}
+                      <div className="lg:hidden">
+                        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                          <h3 className="font-bold text-xs text-slate-400 uppercase mb-6 flex items-center gap-3 tracking-[0.2em]">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                              <Clock size={16}/>
+                            </div>
+                            Histórico Recente
+                          </h3>
+                          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            {historico.slice(0, 3).map(h => ( // Apenas 3 itens em mobile
+                              <div key={h.id} className="p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm">
+                                <div className="flex justify-between text-[10px] font-bold text-blue-500 uppercase mb-2">
+                                  <span className="px-2 py-0.5 bg-blue-50 rounded-md tracking-wider truncate max-w-[50%]">
+                                    {h.tipo}
+                                  </span>
+                                  <span className="text-slate-400 font-medium text-[9px]">
+                                    {h.data?.seconds ? new Date(h.data.seconds * 1000).toLocaleDateString() : 'Hoje'}
+                                  </span>
+                                </div>
+                                <p className="font-bold text-base text-slate-800 mb-3 line-clamp-2 leading-snug">
+                                  {h.titulo}
+                                </p>
+                                <button 
+                                  onClick={() => setRegistroVisualizar(h)}
+                                  className="w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm uppercase tracking-widest"
+                                >
+                                  Detalhes
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          {historico.length > 3 && (
+                            <div className="mt-4 text-center">
+                              <button 
+                                onClick={() => setRegistroVisualizar(historico[0])} // Abre o modal com o primeiro item
+                                className="text-sm text-blue-600 font-medium hover:text-blue-800"
+                              >
+                                Ver mais {historico.length - 3} registros...
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Coluna Lateral/Histórico */}
-                    <div className="lg:col-span-4 2xl:col-span-3 order-1 lg:order-2">
-                      <div className="bg-white p-6 lg:p-8 rounded-3xl lg:rounded-[2rem] border border-slate-100 shadow-sm flex flex-col lg:sticky lg:top-0 h-auto lg:h-[calc(100vh-280px)]">
-                        <h3 className="font-bold text-xs text-slate-400 uppercase mb-6 lg:mb-8 flex items-center gap-3 tracking-[0.2em]">
+                    {/* HISTÓRICO - VISÍVEL APENAS EM DESKTOP (lado direito) */}
+                    <div className="hidden lg:block lg:col-span-4 2xl:col-span-3">
+                      <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col sticky top-0 h-[calc(100vh-280px)]">
+                        <h3 className="font-bold text-xs text-slate-400 uppercase mb-8 flex items-center gap-3 tracking-[0.2em]">
                           <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                             <Clock size={16}/>
+                            <Clock size={16}/>
                           </div>
                           Histórico Recente
                         </h3>
-                        <div className="flex-1 overflow-y-auto pr-2 space-y-4 lg:space-y-5 custom-scrollbar max-h-[400px] lg:max-h-none">
+                        <div className="flex-1 overflow-y-auto pr-2 space-y-5 custom-scrollbar">
                           {historico.map(h => (
-                            <div key={h.id} className="p-4 lg:p-6 bg-slate-50 rounded-2xl lg:rounded-[1.5rem] border border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm">
-                              <div className="flex justify-between text-[10px] font-bold text-blue-500 uppercase mb-2 lg:mb-3">
+                            <div key={h.id} className="p-6 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm">
+                              <div className="flex justify-between text-[10px] font-bold text-blue-500 uppercase mb-3">
                                 <span className="px-2 py-0.5 bg-blue-50 rounded-md tracking-wider truncate max-w-[50%]">
                                   {h.tipo}
                                 </span>
@@ -380,12 +426,12 @@ export default function ProntuarioAvancado() {
                                   {h.data?.seconds ? new Date(h.data.seconds * 1000).toLocaleDateString() : 'Hoje'}
                                 </span>
                               </div>
-                              <p className="font-bold text-base lg:text-lg text-slate-800 mb-3 lg:mb-4 line-clamp-2 leading-snug">
+                              <p className="font-bold text-lg text-slate-800 mb-4 line-clamp-2 leading-snug">
                                 {h.titulo}
                               </p>
                               <button 
                                 onClick={() => setRegistroVisualizar(h)}
-                                className="w-full py-2.5 lg:py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm uppercase tracking-widest"
+                                className="w-full py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm uppercase tracking-widest"
                               >
                                 Detalhes
                               </button>

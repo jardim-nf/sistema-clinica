@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  updateProfile 
+  updateProfile,
+  sendPasswordResetEmail // <--- IMPORTAÇÃO ADICIONADA
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -58,6 +59,12 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // --- FUNÇÃO DE RESETAR SENHA (NOVA) ---
+  function resetPassword(email) {
+    console.log("DEBUG: Solicitando reset de senha para:", email);
+    return sendPasswordResetEmail(auth, email);
+  }
+
   // --- MONITORAR USUÁRIO LOGADO ---
   useEffect(() => {
     console.log("DEBUG: AuthContext useEffect iniciado.");
@@ -106,27 +113,25 @@ export function AuthProvider({ children }) {
           console.log("DEBUG: Usuário deslogado. UserData limpo.");
         }
       } catch (error) {
-          // CRÍTICO: Este catch vai pegar erros de permissão ou conexão do Firestore.
           console.error("ERRO FATAL NO CARREGAMENTO (DENTRO DO TRY):", error);
       } finally {
-        setLoading(false); // Esta linha deve sempre liberar o aplicativo
-        console.log("DEBUG: setLoading(false) CHAMADO. O aplicativo deve renderizar agora.");
+        setLoading(false); 
+        console.log("DEBUG: setLoading(false) CHAMADO.");
       }
     });
 
     return unsubscribe;
   }, []);
 
-  const value = { user, userData, signup, login, logout };
+  // Adicionamos resetPassword ao value
+  const value = { user, userData, signup, login, logout, resetPassword };
 
   return (
     <AuthContext.Provider value={value}>
       {
-        // Se estiver carregando, mostra uma tela de carregamento.
         loading ? 
         <div className="h-screen flex items-center justify-center text-blue-600 font-bold">Carregando sistema...</div> 
         : 
-        // Se já carregou, renderiza o resto do app
         children
       }
     </AuthContext.Provider>

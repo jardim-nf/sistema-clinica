@@ -29,6 +29,8 @@ export default function Login() {
         message = 'Usuário não encontrado.';
       } else if (error.code === 'auth/wrong-password') {
         message = 'Senha incorreta.';
+      } else if (error.code === 'auth/too-many-requests') {
+        message = 'Muitas tentativas falhas. Tente novamente mais tarde.';
       }
 
       showToast(message, 'error');
@@ -72,6 +74,16 @@ export default function Login() {
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
               placeholder="••••••••"
             />
+            
+            {/* --- LINK ESQUECEU A SENHA (ADICIONADO) --- */}
+            <div className="flex justify-end mt-2">
+              <Link 
+                to="/recuperar-senha" 
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+              >
+                Esqueceu a senha?
+              </Link>
+            </div>
           </div>
 
           <button

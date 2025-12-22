@@ -6,11 +6,11 @@ import ModalPaciente from '../components/ModalPaciente';
 import { 
   Loader2, Plus, Users, Search, 
   Edit, Trash2, UserPlus, Phone, Mail, Hash,
-  Filter, MoreVertical, Download, Upload
+  Filter, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- FUNÇÕES DE MÁSCARA (Para exibição na Tabela) ---
+// --- FUNÇÕES DE MÁSCARA ---
 const mascaraCPF = (valor) => {
   if (!valor) return 'N/A';
   const digits = valor.replace(/\D/g, ''); 
@@ -32,9 +32,8 @@ const mascaraTelefone = (valor) => {
   }
   return valor; 
 };
-// ---------------------------------------------------
 
-// Componente para cartão de paciente (Mobile)
+// Componente Card Mobile
 const PacienteCard = ({ paciente, onEdit, onDelete }) => (
   <motion.div 
     initial={{ opacity: 0, y: 10 }}
@@ -94,7 +93,7 @@ const PacienteCard = ({ paciente, onEdit, onDelete }) => (
   </motion.div>
 );
 
-// Componente para a linha da tabela (Desktop)
+// Componente Linha Tabela Desktop
 const PacienteRow = ({ paciente, onEdit, onDelete }) => (
   <motion.tr 
     initial={{ opacity: 0 }}
@@ -181,7 +180,7 @@ export default function Pacientes() {
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [modalOpen, setModalOpen] = useState(false);
   const [pacienteToEdit, setPacienteToEdit] = useState(null);
   const [stats, setStats] = useState({
@@ -202,7 +201,6 @@ export default function Pacientes() {
       if (Array.isArray(data)) {
         setPacientes(data);
         
-        // Calcular estatísticas
         const hoje = new Date().toISOString().split('T')[0];
         const novosHoje = data.filter(p => {
           const dataCriacao = p.createdAt?.split('T')[0];
@@ -220,7 +218,8 @@ export default function Pacientes() {
       }
     } catch (error) {
       console.error(error);
-      showToast({ message: "Erro ao carregar pacientes.", type: "error" });
+      // CORREÇÃO AQUI: Passando strings separadas
+      showToast("Erro ao carregar pacientes.", "error");
       setPacientes([]); 
     } finally {
       setLoading(false);
@@ -233,7 +232,8 @@ export default function Pacientes() {
 
   const handleSalvar = async (dados) => {
     if (!idDaClinica) {
-      showToast({ message: "Clínica não identificada.", type: "error" });
+      // CORREÇÃO AQUI
+      showToast("Clínica não identificada.", "error");
       return;
     }
     
@@ -243,10 +243,8 @@ export default function Pacientes() {
       const pacienteExistente = await pacienteService.buscarPorCPF(idDaClinica, dados.cpf);
       
       if (pacienteExistente && pacienteExistente.id !== dados.id) {
-        showToast({ 
-          message: `O CPF ${mascaraCPF(cpfLimpo)} já está cadastrado para ${pacienteExistente.nome}.`, 
-          type: "error" 
-        });
+        // CORREÇÃO AQUI
+        showToast(`O CPF ${mascaraCPF(cpfLimpo)} já está cadastrado para ${pacienteExistente.nome}.`, "error");
         return;
       }
     }
@@ -259,10 +257,12 @@ export default function Pacientes() {
     try {
       if (dados.id) {
         await pacienteService.atualizar(dados.id, payload);
-        showToast({ message: "Paciente atualizado com sucesso!", type: "success" });
+        // CORREÇÃO AQUI
+        showToast("Paciente atualizado com sucesso!", "success");
       } else {
         await pacienteService.criar(payload);
-        showToast({ message: "Paciente cadastrado com sucesso!", type: "success" });
+        // CORREÇÃO AQUI
+        showToast("Paciente cadastrado com sucesso!", "success");
       }
       
       setModalOpen(false);
@@ -270,7 +270,8 @@ export default function Pacientes() {
     } catch (error) {
       console.error(error);
       const msg = error.code === 'permission-denied' ? "Permissão insuficiente." : "Erro ao salvar paciente.";
-      showToast({ message: msg, type: "error" }); 
+      // CORREÇÃO AQUI
+      showToast(msg, "error");
     }
   };
 
@@ -278,11 +279,13 @@ export default function Pacientes() {
     if (window.confirm("Tem certeza que deseja excluir este paciente? Esta ação é irreversível.")) {
       try {
         await pacienteService.excluir(pacienteId); 
-        showToast({ message: "Paciente excluído.", type: "success" });
+        // CORREÇÃO AQUI
+        showToast("Paciente excluído.", "success");
         await fetchPacientes();
       } catch (error) {
         console.error(error);
-        showToast({ message: "Erro ao excluir paciente.", type: "error" }); 
+        // CORREÇÃO AQUI
+        showToast("Erro ao excluir paciente.", "error");
       }
     }
   };

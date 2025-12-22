@@ -1,223 +1,282 @@
-// src/components/ModalPaciente.jsx - CORRIGIDO: Inicialização de Estado para Evitar Trava (Handle Null/Undefined)
-
 import React, { useState, useEffect } from 'react';
-import { X, Check, Loader2, User } from 'lucide-react';
-// Se você usa a função mascaraCPF em outro lugar, pode importá-la aqui.
-// Por simplicidade, as funções de máscara foram mantidas em Pacientes.jsx.
-// Se elas existirem aqui, devem ser verificadas também.
+import { X, Save, User, Phone, Mail, Hash, Calendar, ShieldCheck } from 'lucide-react';
 
-const ModalPaciente = ({ isOpen, onClose, onSave, paciente }) => {
-    // Funções de Máscara (Reaplicadas aqui para inputs formatados, se necessário)
-    // Se você tem inputs que usam máscara em tempo real, essas funções são cruciais
-    const mascaraCPF = (valor) => {
-        if (!valor) return '';
-        const digits = valor.replace(/\D/g, ''); 
-        return digits
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-            .replace(/(-\d{2})\d+?$/, '$1'); 
-    };
+export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
+  // Estado inicial do formulário
+  const initialFormState = {
+    nome: '',
+    cpf: '',
+    email: '',
+    telefone: '',
+    dataNascimento: '',
+    genero: 'nao_informado',
+    status: 'ativo',
+    observacoes: ''
+  };
 
-    const mascaraTelefone = (valor) => {
-        if (!valor) return '';
-        const digits = valor.replace(/\D/g, '');
-        if (digits.length === 11) { 
-            return digits.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-        }
-        if (digits.length === 10) { 
-            return digits.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-        }
-        return valor; 
-    };
+  const [formData, setFormData] = useState(initialFormState);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (isOpen) {
+      if (paciente) {
+        setFormData({
+          ...initialFormState,
+          ...paciente,
+          email: paciente.email || '',
+          cpf: mascaraCPF(paciente.cpf || ''),
+          telefone: mascaraTelefone(paciente.telefone || '')
+        });
+      } else {
+        setFormData(initialFormState);
+      }
+      setErrors({});
+    }
+  }, [isOpen, paciente]);
+
+  // --- MÁSCARAS ---
+  const mascaraCPF = (value) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1');
+  };
+
+  const mascaraTelefone = (value) => {
+    let r = value.replace(/\D/g, "");
+    r = r.replace(/^0/, "");
+    if (r.length > 10) {
+      r = r.replace(/^(\d\d)(\d{5})(\d{4}).*/, "($1) $2-$3");
+    } else if (r.length > 5) {
+      r = r.replace(/^(\d\d)(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+    } else if (r.length > 2) {
+      r = r.replace(/^(\d\d)(\d{0,5}).*/, "($1) $2");
+    } else {
+      r = r.replace(/^(\d*)/, "($1");
+    }
+    return r;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let novoValor = value;
+
+    if (name === 'cpf') novoValor = mascaraCPF(value);
+    if (name === 'telefone') novoValor = mascaraTelefone(value);
+
+    setFormData(prev => ({ ...prev, [name]: novoValor }));
     
-    // --- ESTADO DO FORMULÁRIO (CRÍTICO) ---
-    const [formData, setFormData] = useState({
-        id: null,
-        nome: '',
-        cpf: '', // Deve ser string vazia
-        email: '', // Deve ser string vazia
-        telefone: '', // Deve ser string vazia
-        dataNascimento: '', // Deve ser string vazia
-        // Adicione outros campos com string vazia aqui:
-        // cep: '',
-        // endereco: '',
-    });
-    const [salvando, setSalvando] = useState(false);
+    // Limpa erro ao digitar
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
+  };
 
-    useEffect(() => {
-        if (isOpen && paciente) {
-            // CRÍTICO: Garante que todos os valores de paciente são inicializados
-            // mesmo que o Firestore tenha retornado null ou undefined para alguns campos.
-            // O Pacientes.jsx já faz a pré-limpeza, mas é bom garantir aqui também.
-            setFormData({
-                id: paciente.id || null,
-                nome: paciente.nome || '',
-                cpf: paciente.cpf || '',
-                email: paciente.email || '',
-                telefone: paciente.telefone || '',
-                dataNascimento: paciente.dataNascimento || '',
-                // Adicione outros campos aqui:
-                // cep: paciente.cep.replace(/\D/g, '') || '', // Se for para remover máscara ao carregar
-                // endereco: paciente.endereco || '',
-            });
-        } else if (isOpen) {
-            // Limpa o formulário para um novo cadastro
-            setFormData({
-                id: null,
-                nome: '',
-                cpf: '',
-                email: '',
-                telefone: '',
-                dataNascimento: '',
-            });
-        }
-    }, [paciente, isOpen]);
+  // --- VALIDAÇÃO E ENVIO ---
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const newErrors = {};
 
-    if (!isOpen) return null;
+    // 1. Nome Obrigatório
+    if (!formData.nome.trim()) {
+      newErrors.nome = "Nome é obrigatório";
+    }
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        let newValue = value;
+    // 2. Telefone Obrigatório
+    if (!formData.telefone.trim()) {
+      newErrors.telefone = "Telefone é obrigatório";
+    }
+    
+    // 3. CPF Obrigatório e com 11 dígitos
+    const cpfLimpo = formData.cpf.replace(/\D/g, '');
+    if (!cpfLimpo) {
+      newErrors.cpf = "CPF é obrigatório";
+    } else if (cpfLimpo.length !== 11) {
+      newErrors.cpf = "CPF incompleto (digite 11 números)";
+    }
 
-        // Aplica máscara em tempo real para CPF/Telefone no input
-        if (name === 'cpf') {
-            newValue = mascaraCPF(value);
-        } else if (name === 'telefone') {
-            newValue = mascaraTelefone(value);
-        }
+    // Se houver erros, para aqui
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
-        setFormData({ ...formData, [name]: newValue });
-    };
+    // Envia dados limpos
+    onSave({
+      ...formData,
+      cpf: formData.cpf.replace(/\D/g, ''),
+      telefone: formData.telefone.replace(/\D/g, '')
+    });
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (salvando || !formData.nome || !formData.telefone) return; 
+  if (!isOpen) return null;
 
-        setSalvando(true);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
         
-        // Antes de salvar, limpa CPF e Telefone (remove a máscara visual)
-        const dataToSave = {
-            ...formData,
-            cpf: formData.cpf.replace(/\D/g, ''),
-            telefone: formData.telefone.replace(/\D/g, ''),
-            // Certifique-se de que dataNascimento não é string vazia se o Firestore precisar de null
-            // dataNascimento: formData.dataNascimento || null, 
-        };
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">
+              {paciente ? 'Editar Paciente' : 'Novo Paciente'}
+            </h2>
+            <p className="text-sm text-slate-500">
+              {paciente ? 'Atualize os dados abaixo' : 'Preencha as informações para cadastro'}
+            </p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
 
-        await onSave(dataToSave);
-        setSalvando(false);
-    };
+        {/* Body */}
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+          <form id="pacienteForm" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Nome */}
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-sm font-medium text-slate-700">Nome Completo *</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  name="nome"
+                  value={formData.nome}
+                  onChange={handleChange}
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.nome ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  placeholder="Ex: João da Silva"
+                />
+              </div>
+              {errors.nome && <p className="text-xs text-red-500 font-medium">{errors.nome}</p>}
+            </div>
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                
-                {/* HEADER */}
-                <div className="px-6 py-4 flex justify-between items-center border-b border-slate-100 bg-slate-50">
-                    <div>
-                        <h2 className="text-lg font-bold text-slate-800">
-                            {formData.id ? 'Editar Paciente' : 'Novo Paciente'}
-                        </h2>
-                        <p className="text-xs text-slate-500">
-                            {formData.id ? 'Atualize os dados' : 'Preencha o cadastro'}
-                        </p>
-                    </div>
-                    <button onClick={onClose} disabled={salvando} className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition">
-                        <X size={20} />
-                    </button>
-                </div>
+            {/* CPF (AGORA OBRIGATÓRIO) */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">CPF *</label>
+              <div className="relative">
+                <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  name="cpf"
+                  value={formData.cpf}
+                  onChange={handleChange}
+                  maxLength={14}
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+              {errors.cpf && <p className="text-xs text-red-500 font-medium">{errors.cpf}</p>}
+            </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                    
-                    {/* NOME E CPF */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Nome Completo</label>
-                            <input 
-                                type="text" 
-                                name="nome"
-                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-700 text-sm font-medium focus:outline-indigo-500" 
-                                value={formData.nome} 
-                                onChange={handleChange} 
-                                required 
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">CPF (Opcional)</label>
-                            <input 
-                                type="text" 
-                                name="cpf"
-                                maxLength={14}
-                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-700 text-sm font-medium focus:outline-indigo-500" 
-                                value={formData.cpf} 
-                                onChange={handleChange} 
-                            />
-                        </div>
-                    </div>
+            {/* Telefone */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Telefone / WhatsApp *</label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  name="telefone"
+                  value={formData.telefone}
+                  onChange={handleChange}
+                  maxLength={15}
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.telefone ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              {errors.telefone && <p className="text-xs text-red-500 font-medium">{errors.telefone}</p>}
+            </div>
 
-                    {/* TELEFONE, EMAIL e DATA NASC */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Telefone</label>
-                            <input 
-                                type="tel" 
-                                name="telefone"
-                                maxLength={15}
-                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-700 text-sm font-medium focus:outline-indigo-500" 
-                                value={formData.telefone} 
-                                onChange={handleChange} 
-                                required 
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">E-mail</label>
-                            <input 
-                                type="email" 
-                                name="email"
-                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-700 text-sm font-medium focus:outline-indigo-500" 
-                                value={formData.email} 
-                                onChange={handleChange} 
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Data Nasc.</label>
-                            <input 
-                                type="date" 
-                                name="dataNascimento"
-                                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-700 text-sm font-medium focus:outline-indigo-500" 
-                                value={formData.dataNascimento} 
-                                onChange={handleChange} 
-                            />
-                        </div>
-                    </div>
+            {/* Email */}
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-sm font-medium text-slate-700">E-mail</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
+                  placeholder="exemplo@email.com"
+                />
+              </div>
+            </div>
 
-                    {/* Endereço (Exemplo de campo extra) */}
-                    {/*
-                    <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Endereço</label>
-                        <input 
-                            type="text" 
-                            name="endereco"
-                            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-700 text-sm font-medium focus:outline-indigo-500" 
-                            value={formData.endereco} 
-                            onChange={handleChange} 
-                        />
-                    </div>
-                    */}
+            {/* Data Nascimento */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Data de Nascimento</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="date"
+                  name="dataNascimento"
+                  value={formData.dataNascimento}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all text-slate-600"
+                />
+              </div>
+            </div>
 
-                    {/* BOTÕES */}
-                    <div className="pt-4 mt-2 border-t border-slate-100 flex gap-3">
-                        <button type="button" onClick={onClose} disabled={salvando} className="flex-1 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm transition">Cancelar</button>
-                        <button type="submit" disabled={salvando} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50 transition">
-                            {salvando ? <Loader2 className="animate-spin" size={18}/> : <Check size={18}/>}
-                            {formData.id ? 'Salvar Edição' : 'Cadastrar'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};
+            {/* Status */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Status</label>
+              <div className="relative">
+                <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all appearance-none text-slate-600"
+                >
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                </select>
+              </div>
+            </div>
 
-export default ModalPaciente;
+            {/* Observações */}
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-sm font-medium text-slate-700">Observações</label>
+              <textarea
+                name="observacoes"
+                value={formData.observacoes}
+                onChange={handleChange}
+                rows="3"
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all resize-none"
+                placeholder="Histórico médico breve ou observações importantes..."
+              />
+            </div>
+
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-2xl">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-100 hover:text-slate-800 transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="pacienteForm"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2"
+          >
+            <Save size={18} />
+            {paciente ? 'Salvar Alterações' : 'Cadastrar Paciente'}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}

@@ -1,10 +1,8 @@
 import React from 'react';
-import useToast from '../hooks/useToast';
 import './ToastContainer.css';
 
-const ToastContainer = () => {
-  const { toasts, removeToast } = useToast();
-
+// Agora recebe as funções e dados via props, tornando-o reutilizável pelo Contexto
+const ToastContainer = ({ toasts, removeToast }) => {
   const getIconByType = (type) => {
     switch (type) {
       case 'success': return '✓';
@@ -19,7 +17,7 @@ const ToastContainer = () => {
     return `toast toast-${type}`;
   };
 
-  if (toasts.length === 0) return null;
+  if (!toasts || toasts.length === 0) return null;
 
   return (
     <div className="toast-container top-right">

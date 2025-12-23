@@ -43,7 +43,8 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-blue-600">SysClin</h1>
+          {/* MUDANÇA: Nome Sanus e cor Emerald */}
+          <h1 className="text-4xl font-extrabold text-emerald-600">Sanus</h1>
           <p className="mt-2 text-xl font-semibold text-slate-700">Acesse sua conta</p>
         </div>
 
@@ -57,7 +58,8 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+              // MUDANÇA: Focus ring verde
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 ease-in-out"
               placeholder="seu.email@exemplo.com"
             />
           </div>
@@ -71,15 +73,16 @@ export default function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+              // MUDANÇA: Focus ring verde
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 ease-in-out"
               placeholder="••••••••"
             />
             
-            {/* --- LINK ESQUECEU A SENHA (ADICIONADO) --- */}
             <div className="flex justify-end mt-2">
               <Link 
                 to="/recuperar-senha" 
-                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                // MUDANÇA: Texto verde
+                className="text-sm font-medium text-emerald-600 hover:text-emerald-800 hover:underline transition-colors"
               >
                 Esqueceu a senha?
               </Link>
@@ -89,10 +92,11 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
+            // MUDANÇA: Botão verde
             className={`w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-lg text-white font-semibold text-lg transition duration-150 ease-in-out ${
               loading 
-                ? 'bg-blue-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50'
+                ? 'bg-emerald-400 cursor-not-allowed' 
+                : 'bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500 focus:ring-opacity-50'
             }`}
           >
             {loading ? (
@@ -106,7 +110,8 @@ export default function Login() {
 
         <div className="text-center text-sm text-slate-600">
           Não tem uma conta?{' '}
-          <Link to="/cadastro" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
+          {/* MUDANÇA: Link verde */}
+          <Link to="/cadastro" className="font-medium text-emerald-600 hover:text-emerald-700 transition-colors">
             Cadastre-se agora
           </Link>
         </div>

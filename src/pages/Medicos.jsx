@@ -6,7 +6,6 @@ import {
   Plus, Search, Edit2, Trash2, Loader2, Stethoscope, Save, X, Phone 
 } from 'lucide-react';
 
-// --- FUNÇÃO DE MÁSCARA DE TELEFONE ---
 const mascaraTelefone = (valor) => {
   if (!valor) return "";
   let v = valor.replace(/\D/g, "");
@@ -19,28 +18,15 @@ const mascaraTelefone = (valor) => {
 export default function Medicos() {
   const { userData } = useAuth();
   const { showToast } = useToast();
-  
   const [medicos, setMedicos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState('');
-
-  const [formData, setFormData] = useState({
-    id: null,
-    nome: '',
-    especialidade: '',
-    crm: '',
-    telefone: ''
-  });
-
+  const [formData, setFormData] = useState({ id: null, nome: '', especialidade: '', crm: '', telefone: '' });
   const clinicaId = userData?.clinicaId || userData?.uid;
 
-  useEffect(() => {
-    if (clinicaId) {
-        carregarMedicos();
-    }
-  }, [clinicaId]);
+  useEffect(() => { if (clinicaId) carregarMedicos(); }, [clinicaId]);
 
   async function carregarMedicos() {
     setLoading(true);
@@ -48,8 +34,6 @@ export default function Medicos() {
       const lista = await medicoService.listar(clinicaId);
       setMedicos(lista);
     } catch (error) {
-      console.error(error);
-      // CORREÇÃO: Passando string e tipo separadamente
       showToast("Erro ao carregar médicos", "error");
     } finally {
       setLoading(false);
@@ -57,11 +41,8 @@ export default function Medicos() {
   }
 
   function abrirModal(medico = null) {
-    if (medico) {
-      setFormData(medico);
-    } else {
-      setFormData({ id: null, nome: '', especialidade: '', crm: '', telefone: '' });
-    }
+    if (medico) setFormData(medico);
+    else setFormData({ id: null, nome: '', especialidade: '', crm: '', telefone: '' });
     setModalOpen(true);
   }
 
@@ -74,28 +55,17 @@ export default function Medicos() {
     e.preventDefault();
     setSalvando(true);
     try {
-      const payload = {
-        nome: formData.nome,
-        especialidade: formData.especialidade,
-        crm: formData.crm,
-        telefone: formData.telefone,
-        clinicaId
-      };
-
+      const payload = { ...formData, clinicaId };
       if (formData.id) {
         await medicoService.atualizar(formData.id, payload);
-        // CORREÇÃO AQUI
         showToast("Médico atualizado com sucesso!", "success");
       } else {
         await medicoService.criar(payload);
-        // CORREÇÃO AQUI
         showToast("Médico cadastrado com sucesso!", "success");
       }
       setModalOpen(false);
       carregarMedicos();
     } catch (error) {
-      console.error(error);
-      // CORREÇÃO AQUI
       showToast("Erro ao salvar as informações.", "error");
     } finally {
       setSalvando(false);
@@ -106,11 +76,9 @@ export default function Medicos() {
     if (window.confirm("Tem certeza que deseja excluir este médico?")) {
       try {
         await medicoService.excluir(id);
-        // CORREÇÃO AQUI (Onde estava dando o erro principal)
         showToast("Médico excluído com sucesso.", "success");
         carregarMedicos();
       } catch (error) {
-        // CORREÇÃO AQUI
         showToast("Erro ao excluir médico.", "error");
       }
     }
@@ -125,23 +93,22 @@ export default function Medicos() {
     <div className="p-4 md:p-8 min-h-screen bg-slate-50">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header */}
+        {/* Header Verde */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-              <div className="p-2 bg-blue-600 rounded-lg text-white">
+              <div className="p-2 bg-emerald-600 rounded-lg text-white">
                 <Stethoscope size={24} />
               </div>
               Corpo Clínico
             </h1>
             <p className="text-slate-500 mt-1 ml-12">Gerencie os médicos e especialistas da clínica.</p>
           </div>
-          <button onClick={() => abrirModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all">
+          <button onClick={() => abrirModal()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 transition-all">
             <Plus size={20} /> Novo Médico
           </button>
         </div>
 
-        {/* Busca */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex items-center gap-3">
           <Search className="text-slate-400" />
           <input 
@@ -153,26 +120,27 @@ export default function Medicos() {
           />
         </div>
 
-        {/* Lista */}
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-blue-600" size={40}/></div>
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-600" size={40}/></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {medicosFiltrados.map(medico => (
               <div key={medico.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group relative overflow-hidden">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg border border-blue-100">
+                  {/* MUDANÇA: Avatar com fundo verde claro e texto verde */}
+                  <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 font-bold text-lg border border-emerald-100">
                     {medico.nome.substring(0,2).toUpperCase()}
                   </div>
                   <div className="flex gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => abrirModal(medico)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-blue-600 transition-colors" title="Editar"><Edit2 size={16}/></button>
+                    <button onClick={() => abrirModal(medico)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-emerald-600 transition-colors" title="Editar"><Edit2 size={16}/></button>
                     <button onClick={() => handleExcluir(medico.id)} className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors" title="Excluir"><Trash2 size={16}/></button>
                   </div>
                 </div>
                 
                 <h3 className="font-bold text-lg text-slate-800 mb-0.5">{medico.nome}</h3>
-                <p className="text-blue-600 font-bold text-sm mb-3 flex items-center gap-1">
-                   <Stethoscope size={14} className="text-blue-400"/> {medico.especialidade}
+                {/* MUDANÇA: Texto de especialidade verde */}
+                <p className="text-emerald-600 font-bold text-sm mb-3 flex items-center gap-1">
+                   <Stethoscope size={14} className="text-emerald-400"/> {medico.especialidade}
                 </p>
 
                 <div className="pt-3 border-t border-slate-50 space-y-2">
@@ -210,64 +178,32 @@ export default function Medicos() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Nome Completo</label>
-                  <input 
-                    required 
-                    type="text" 
-                    className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white font-medium" 
-                    value={formData.nome} 
-                    onChange={e => setFormData({...formData, nome: e.target.value})} 
-                    placeholder="Ex: Dr. João Silva" 
-                  />
+                  {/* MUDANÇA: Focus border verde */}
+                  <input required type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white font-medium" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} placeholder="Ex: Dr. João Silva" />
                 </div>
-
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Especialidade</label>
                   <div className="relative">
                     <Stethoscope size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                        required 
-                        type="text" 
-                        className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" 
-                        value={formData.especialidade} 
-                        onChange={e => setFormData({...formData, especialidade: e.target.value})} 
-                        placeholder="Ex: Cardiologista" 
-                    />
+                    <input required type="text" className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.especialidade} onChange={e => setFormData({...formData, especialidade: e.target.value})} placeholder="Ex: Cardiologista" />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">CRM / Registro</label>
-                        <input 
-                            type="text" 
-                            className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" 
-                            value={formData.crm} 
-                            onChange={e => setFormData({...formData, crm: e.target.value})}
-                            placeholder="12345/SP"
-                        />
+                        <input type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.crm} onChange={e => setFormData({...formData, crm: e.target.value})} placeholder="12345/SP" />
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Telefone</label>
                         <div className="relative">
                              <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                             <input 
-                                type="text" 
-                                className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" 
-                                value={formData.telefone} 
-                                onChange={handleChangeTelefone} 
-                                placeholder="(00) 00000-0000"
-                                maxLength={15} 
-                             />
+                             <input type="text" className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.telefone} onChange={handleChangeTelefone} placeholder="(00) 00000-0000" maxLength={15} />
                         </div>
                     </div>
                 </div>
-
                 <div className="pt-2">
-                    <button 
-                        disabled={salvando} 
-                        type="submit" 
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all flex justify-center items-center gap-2 mt-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
-                    >
+                    {/* MUDANÇA: Botão de salvar verde */}
+                    <button disabled={salvando} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-all flex justify-center items-center gap-2 mt-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100">
                         {salvando ? <Loader2 className="animate-spin" size={20}/> : <Save size={20}/>} 
                         {formData.id ? 'Salvar Alterações' : 'Cadastrar Médico'}
                     </button>
@@ -276,7 +212,6 @@ export default function Medicos() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

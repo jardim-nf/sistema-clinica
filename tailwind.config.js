@@ -7,7 +7,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#0ea5e9',
+        // MUDANÇA: Primary agora é um tom de Verde Esmeralda (#10b981 é emerald-500)
+        primary: '#10b981', 
         secondary: '#64748b',
         background: '#f8fafc',
       }

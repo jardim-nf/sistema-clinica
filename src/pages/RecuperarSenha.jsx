@@ -35,7 +35,8 @@ export default function RecuperarSenha() {
     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-extrabold text-blue-600">Recuperar Senha</h1>
+          {/* MUDANÇA: Texto verde */}
+          <h1 className="text-3xl font-extrabold text-emerald-600">Recuperar Senha</h1>
           <p className="mt-2 text-slate-600">Digite seu e-mail para receber as instruções.</p>
         </div>
 
@@ -48,7 +49,8 @@ export default function RecuperarSenha() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+              // MUDANÇA: Focus ring verde
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-150"
               placeholder="seu.email@exemplo.com"
             />
           </div>
@@ -56,10 +58,11 @@ export default function RecuperarSenha() {
           <button
             type="submit"
             disabled={loading}
+            // MUDANÇA: Botão verde
             className={`w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-lg text-white font-semibold transition duration-150 ease-in-out ${
               loading 
-                ? 'bg-blue-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'
+                ? 'bg-emerald-400 cursor-not-allowed' 
+                : 'bg-emerald-600 hover:bg-emerald-700'
             }`}
           >
             {loading ? 'Enviando...' : (

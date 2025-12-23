@@ -26,7 +26,8 @@ export default function ProntuarioAvancado() {
 
   const abas = [
     { id: 'evolucao', label: 'Evolução', icon: ClipboardList, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { id: 'receita', label: 'Receita', icon: Pill, color: 'text-blue-600', bg: 'bg-blue-50' },
+    // MUDANÇA: Receita agora é Teal (verde-azulado) para harmonizar
+    { id: 'receita', label: 'Receita', icon: Pill, color: 'text-teal-600', bg: 'bg-teal-50' },
     { id: 'atestado', label: 'Atestado', icon: FileBadge, color: 'text-amber-600', bg: 'bg-amber-50' },
     { id: 'declaracao', label: 'Declaração', icon: FileCheck, color: 'text-purple-600', bg: 'bg-purple-50' }
   ];
@@ -95,7 +96,7 @@ export default function ProntuarioAvancado() {
   }, []);
 
   const handleSalvarRegistro = async () => {
-    if (!pacienteSelecionado) return showToast({ message: "Selecione um paciente", type: "warning" });
+    if (!pacienteSelecionado) return showToast("Selecione um paciente", "warning");
     const conteudo = abaAtiva === 'evolucao' ? formEvolucao.conteudo : documentos[abaAtiva];
     
     try {
@@ -111,11 +112,11 @@ export default function ProntuarioAvancado() {
         tags: abaAtiva === 'evolucao' ? formEvolucao.tags : []
       };
       await prontuarioService.salvarEvolucao(payload);
-      showToast({ message: `Documento salvo com sucesso!`, type: "success" });
+      showToast(`Documento salvo com sucesso!`, "success");
       if (abaAtiva === 'evolucao') setFormEvolucao({ titulo: '', conteudo: '', tags: [] });
       else setDocumentos(prev => ({ ...prev, [abaAtiva]: '' }));
     } catch (error) {
-      showToast({ message: "Erro ao salvar", type: "error" });
+      showToast("Erro ao salvar", "error");
     }
   };
 
@@ -125,7 +126,7 @@ export default function ProntuarioAvancado() {
     const janela = window.open('', '_blank');
     janela.document.write(`
       <html>
-        <head><style>body { font-family: sans-serif; padding: 20px; font-size: 16px; line-height: 1.6; } .header { text-align: center; border-bottom: 2px solid #3182ce; margin-bottom: 20px; } @media print { body { padding: 10px; font-size: 14px; } }</style></head>
+        <head><style>body { font-family: sans-serif; padding: 20px; font-size: 16px; line-height: 1.6; } .header { text-align: center; border-bottom: 2px solid #10b981; margin-bottom: 20px; } @media print { body { padding: 10px; font-size: 14px; } }</style></head>
         <body>
           <div class="header"><h1>${userData?.nomeClinica || 'CLÍNICA'}</h1><h3>${abaAtual.label}</h3></div>
           <p><strong>Paciente:</strong> ${pacienteSelecionado.nome}</p>
@@ -163,7 +164,6 @@ export default function ProntuarioAvancado() {
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         
-        /* Estilos para mobile */
         @media (max-width: 768px) {
           .ql-toolbar { padding: 8px !important; }
           .ql-toolbar .ql-formats { margin-right: 4px !important; }
@@ -199,7 +199,8 @@ export default function ProntuarioAvancado() {
                   <input 
                     type="text" 
                     placeholder="Buscar paciente..." 
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" 
+                    // MUDANÇA: Focus ring verde
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all" 
                     value={busca} 
                     onChange={e => setBusca(e.target.value)} 
                   />
@@ -213,7 +214,8 @@ export default function ProntuarioAvancado() {
                     className={`
                       w-full p-4 mb-3 rounded-2xl text-left transition-all 
                       ${pacienteSelecionado?.id === p.id 
-                        ? 'bg-blue-600 text-white shadow-lg' 
+                        // MUDANÇA: Seleção verde
+                        ? 'bg-emerald-600 text-white shadow-lg' 
                         : 'hover:bg-slate-50'
                       }
                     `}
@@ -266,7 +268,8 @@ export default function ProntuarioAvancado() {
                   </button>
                   <button 
                     onClick={handleSalvarRegistro}
-                    className="px-4 lg:px-6 py-2 lg:py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 shadow-md shadow-blue-200 transition-all uppercase tracking-wider"
+                    // MUDANÇA: Botão salvar verde
+                    className="px-4 lg:px-6 py-2 lg:py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all uppercase tracking-wider"
                   >
                     <Save size={18} /> 
                     <span className="hidden sm:inline">Salvar {abaAtiva}</span>
@@ -279,7 +282,7 @@ export default function ProntuarioAvancado() {
               <div className="flex-1 overflow-y-auto p-4 lg:p-8 2xl:p-12 custom-scrollbar">
                 <div className="max-content-width space-y-6 lg:space-y-8">
                   
-                  {/* Abas - SEMPRE VISÍVEL NO TOPO */}
+                  {/* Abas */}
                   <div className="flex overflow-x-auto pb-2 lg:pb-0 lg:flex-wrap gap-2 bg-white p-2 rounded-2xl border border-slate-100 w-full shadow-sm">
                     {abas.map(a => (
                       <button 
@@ -301,16 +304,16 @@ export default function ProntuarioAvancado() {
                     ))}
                   </div>
 
-                  {/* Layout Responsivo - Mobile: uma coluna, Desktop: duas colunas */}
                   <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-10">
                     
-                    {/* ÁREA PRINCIPAL DO EDITOR (Mobile: em cima, Desktop: esquerda) */}
+                    {/* ÁREA PRINCIPAL DO EDITOR */}
                     <div className="lg:col-span-8 2xl:col-span-9 space-y-6 lg:space-y-8">
                       {/* Editor Principal */}
                       <div className="bg-white p-4 sm:p-6 lg:p-10 rounded-3xl lg:rounded-[2.5rem] border border-slate-100 shadow-sm min-h-[500px]">
                         {abaAtiva === 'evolucao' && (
                           <input 
-                            className="w-full text-2xl lg:text-4xl font-extrabold outline-none border-b border-slate-50 pb-4 mb-6 lg:mb-8 focus:border-blue-500 transition-all placeholder:text-slate-200" 
+                            // MUDANÇA: Border focus verde
+                            className="w-full text-2xl lg:text-4xl font-extrabold outline-none border-b border-slate-50 pb-4 mb-6 lg:mb-8 focus:border-emerald-500 transition-all placeholder:text-slate-200" 
                             placeholder="Título da Evolução..." 
                             value={formEvolucao.titulo} 
                             onChange={e => setFormEvolucao({...formEvolucao, titulo: e.target.value})} 
@@ -338,7 +341,7 @@ export default function ProntuarioAvancado() {
                         </div>
                       </div>
                       
-                      {/* Templates e Checklists - Mobile: após o editor */}
+                      {/* Templates e Checklists */}
                       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
                         <TemplateManager 
                           templates={listaTemplates} 
@@ -360,20 +363,22 @@ export default function ProntuarioAvancado() {
                         />
                       </div>
 
-                      {/* HISTÓRICO - VISÍVEL APENAS EM MOBILE (depois de tudo) */}
+                      {/* HISTÓRICO - VISÍVEL APENAS EM MOBILE */}
                       <div className="lg:hidden">
                         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                           <h3 className="font-bold text-xs text-slate-400 uppercase mb-6 flex items-center gap-3 tracking-[0.2em]">
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                            {/* MUDANÇA: Ícone histórico verde */}
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                               <Clock size={16}/>
                             </div>
                             Histórico Recente
                           </h3>
                           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                            {historico.slice(0, 3).map(h => ( // Apenas 3 itens em mobile
-                              <div key={h.id} className="p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm">
-                                <div className="flex justify-between text-[10px] font-bold text-blue-500 uppercase mb-2">
-                                  <span className="px-2 py-0.5 bg-blue-50 rounded-md tracking-wider truncate max-w-[50%]">
+                            {historico.slice(0, 3).map(h => ( 
+                              // MUDANÇA: Hover item histórico verde
+                              <div key={h.id} className="p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-emerald-100 hover:bg-white transition-all shadow-sm">
+                                <div className="flex justify-between text-[10px] font-bold text-emerald-600 uppercase mb-2">
+                                  <span className="px-2 py-0.5 bg-emerald-50 rounded-md tracking-wider truncate max-w-[50%]">
                                     {h.tipo}
                                   </span>
                                   <span className="text-slate-400 font-medium text-[9px]">
@@ -385,7 +390,8 @@ export default function ProntuarioAvancado() {
                                 </p>
                                 <button 
                                   onClick={() => setRegistroVisualizar(h)}
-                                  className="w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm uppercase tracking-widest"
+                                  // MUDANÇA: Botão detalhes verde
+                                  className="w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm uppercase tracking-widest"
                                 >
                                   Detalhes
                                 </button>
@@ -395,8 +401,9 @@ export default function ProntuarioAvancado() {
                           {historico.length > 3 && (
                             <div className="mt-4 text-center">
                               <button 
-                                onClick={() => setRegistroVisualizar(historico[0])} // Abre o modal com o primeiro item
-                                className="text-sm text-blue-600 font-medium hover:text-blue-800"
+                                onClick={() => setRegistroVisualizar(historico[0])} 
+                                // MUDANÇA: Link verde
+                                className="text-sm text-emerald-600 font-medium hover:text-emerald-800"
                               >
                                 Ver mais {historico.length - 3} registros...
                               </button>
@@ -406,20 +413,22 @@ export default function ProntuarioAvancado() {
                       </div>
                     </div>
 
-                    {/* HISTÓRICO - VISÍVEL APENAS EM DESKTOP (lado direito) */}
+                    {/* HISTÓRICO - VISÍVEL APENAS EM DESKTOP */}
                     <div className="hidden lg:block lg:col-span-4 2xl:col-span-3">
                       <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col sticky top-0 h-[calc(100vh-280px)]">
                         <h3 className="font-bold text-xs text-slate-400 uppercase mb-8 flex items-center gap-3 tracking-[0.2em]">
-                          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                          {/* MUDANÇA: Ícone histórico verde */}
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                             <Clock size={16}/>
                           </div>
                           Histórico Recente
                         </h3>
                         <div className="flex-1 overflow-y-auto pr-2 space-y-5 custom-scrollbar">
                           {historico.map(h => (
-                            <div key={h.id} className="p-6 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm">
-                              <div className="flex justify-between text-[10px] font-bold text-blue-500 uppercase mb-3">
-                                <span className="px-2 py-0.5 bg-blue-50 rounded-md tracking-wider truncate max-w-[50%]">
+                            // MUDANÇA: Hover item histórico verde
+                            <div key={h.id} className="p-6 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-emerald-100 hover:bg-white transition-all shadow-sm">
+                              <div className="flex justify-between text-[10px] font-bold text-emerald-600 uppercase mb-3">
+                                <span className="px-2 py-0.5 bg-emerald-50 rounded-md tracking-wider truncate max-w-[50%]">
                                   {h.tipo}
                                 </span>
                                 <span className="text-slate-400 font-medium text-[9px] lg:text-[10px]">
@@ -431,7 +440,8 @@ export default function ProntuarioAvancado() {
                               </p>
                               <button 
                                 onClick={() => setRegistroVisualizar(h)}
-                                className="w-full py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm uppercase tracking-widest"
+                                // MUDANÇA: Botão detalhes verde
+                                className="w-full py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm uppercase tracking-widest"
                               >
                                 Detalhes
                               </button>
@@ -449,9 +459,9 @@ export default function ProntuarioAvancado() {
               <div className="relative mb-6 lg:mb-8">
                 <Stethoscope size={80} lg:size={120} className="opacity-[0.03]" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                   <div className="w-16 h-16 lg:w-24 lg:h-24 bg-slate-50 rounded-full animate-pulse flex items-center justify-center">
+                    <div className="w-16 h-16 lg:w-24 lg:h-24 bg-slate-50 rounded-full animate-pulse flex items-center justify-center">
                       <Search size={24} lg:size={32} className="text-slate-300" />
-                   </div>
+                    </div>
                 </div>
               </div>
               <p className="text-lg lg:text-2xl tracking-tighter text-slate-400 uppercase text-center">
@@ -459,7 +469,8 @@ export default function ProntuarioAvancado() {
               </p>
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold lg:hidden"
+                // MUDANÇA: Botão buscar verde
+                className="mt-6 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold lg:hidden"
               >
                 Buscar Paciente
               </button>

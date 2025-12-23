@@ -37,19 +37,21 @@ export default function ModalDespesa({ isOpen, onClose, onSave }) {
           <h2 className="text-lg font-bold text-red-600 flex items-center gap-2">
             <DollarSign size={20}/> Nova Despesa
           </h2>
-          <button onClick={onClose} disabled={salvando} className="p-2 hover:bg-slate-200 rounded-full text-slate-500">
+          <button onClick={onClose} disabled={salvando} className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition">
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
+          {/* Descrição */}
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Descrição</label>
             <input 
               type="text" 
               placeholder="Ex: Conta de Luz, Aluguel..." 
-              className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500"
+              // MUDANÇA: Focus ring vermelho para despesa
+              className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all"
               value={formData.descricao}
               onChange={e => setFormData({...formData, descricao: e.target.value})}
               autoFocus
@@ -58,23 +60,27 @@ export default function ModalDespesa({ isOpen, onClose, onSave }) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            {/* Valor */}
             <div>
                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Valor (R$)</label>
                <input 
                  type="number" 
                  step="0.01"
                  placeholder="0,00" 
-                 className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500"
+                 // MUDANÇA: Focus ring vermelho
+                 className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all"
                  value={formData.valor}
                  onChange={e => setFormData({...formData, valor: e.target.value})}
                  required
                />
             </div>
+            {/* Data */}
             <div>
                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Data</label>
                <input 
                  type="date" 
-                 className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500"
+                 // MUDANÇA: Focus ring vermelho
+                 className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all text-slate-600"
                  value={formData.data}
                  onChange={e => setFormData({...formData, data: e.target.value})}
                  required
@@ -86,9 +92,9 @@ export default function ModalDespesa({ isOpen, onClose, onSave }) {
              <button 
                type="submit" 
                disabled={salvando} 
-               className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-200 disabled:opacity-70 transition"
+               className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-200 disabled:opacity-70 transition active:scale-95"
              >
-                {salvando ? <Loader2 className="animate-spin"/> : <Check size={20}/>}
+                {salvando ? <Loader2 className="animate-spin" size={20}/> : <Check size={20}/>}
                 Lançar Despesa
              </button>
           </div>

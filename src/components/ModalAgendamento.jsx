@@ -19,7 +19,6 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
   useEffect(() => {
     if (isOpen) {
       if (dadosIniciais) {
-        // Se tem dados, preenche o formulário (Edição)
         setFormData({
           id: dadosIniciais.id || null,
           pacienteId: dadosIniciais.pacienteId || '',
@@ -32,7 +31,6 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
           observacoes: dadosIniciais.observacoes || ''
         });
       } else {
-        // --- CORREÇÃO: SE NÃO TEM DADOS, LIMPA TUDO (Reset) ---
         setFormData({
           id: null,
           pacienteId: '',
@@ -96,8 +94,10 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
           {/* SELEÇÃO DE MÉDICO */}
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Profissional / Médico</label>
-             <div className="flex items-center gap-3 p-2 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors">
-                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+             {/* MUDANÇA: Border e Focus verde */}
+             <div className="flex items-center gap-3 p-2 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-emerald-500 focus-within:bg-white transition-colors">
+                {/* MUDANÇA: Ícone verde */}
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                   <Stethoscope size={20} />
                 </div>
                 <div className="flex-1">
@@ -115,7 +115,8 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
                 </div>
              </div>
              {medicoSelecionado && (
-                <p className="text-xs text-blue-600 mt-1 ml-2 font-medium">Especialidade: {medicoSelecionado.especialidade}</p>
+                // MUDANÇA: Texto verde
+                <p className="text-xs text-emerald-600 mt-1 ml-2 font-medium">Especialidade: {medicoSelecionado.especialidade}</p>
              )}
           </div>
 
@@ -123,7 +124,8 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Paciente</label>
              <div className="flex items-center gap-3 p-2 border border-slate-200 rounded-xl bg-slate-50">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">
+                {/* MUDANÇA: Avatar verde teal */}
+                <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">
                   {iniciais}
                 </div>
                 <select 
@@ -187,7 +189,8 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
                 </button>
              )}
              <button type="button" onClick={onClose} disabled={salvando} className="flex-1 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm">Cancelar</button>
-             <button type="submit" disabled={salvando} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50">
+             {/* MUDANÇA: Botão salvar verde */}
+             <button type="submit" disabled={salvando} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50">
                  {salvando ? <Loader2 className="animate-spin" size={18}/> : <Check size={18}/>} Salvar
              </button>
           </div>

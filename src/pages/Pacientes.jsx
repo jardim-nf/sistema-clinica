@@ -38,17 +38,20 @@ const PacienteCard = ({ paciente, onEdit, onDelete }) => (
   <motion.div 
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-100 transition-all duration-300"
+    // MUDANÇA: Hover border verde
+    className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-emerald-100 transition-all duration-300"
   >
     <div className="flex justify-between items-start mb-3">
       <div>
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-            <Users size={18} className="text-blue-600" />
+          {/* MUDANÇA: Avatar verde */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+            <Users size={18} className="text-emerald-600" />
           </div>
           <h3 className="font-bold text-lg text-slate-800 truncate">{paciente.nome}</h3>
         </div>
         <div className="flex items-center gap-2 mb-1">
+          {/* MUDANÇA: Badge de status verde */}
           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
             paciente.status === 'ativo' 
               ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
@@ -86,7 +89,8 @@ const PacienteCard = ({ paciente, onEdit, onDelete }) => (
     
     <button
       onClick={() => onEdit(paciente)}
-      className="mt-4 w-full py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 rounded-xl font-bold text-sm hover:from-blue-100 hover:to-indigo-100 transition-all flex items-center justify-center gap-2 border border-blue-100"
+      // MUDANÇA: Botão editar verde claro
+      className="mt-4 w-full py-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-600 rounded-xl font-bold text-sm hover:from-emerald-100 hover:to-teal-100 transition-all flex items-center justify-center gap-2 border border-emerald-100"
     >
       <Edit size={16} /> Editar Paciente
     </button>
@@ -98,13 +102,15 @@ const PacienteRow = ({ paciente, onEdit, onDelete }) => (
   <motion.tr 
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
-    className="border-b hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-all duration-200 group cursor-pointer"
+    // MUDANÇA: Hover com fundo verde suave
+    className="border-b hover:bg-gradient-to-r hover:from-emerald-50/30 hover:to-teal-50/30 transition-all duration-200 group cursor-pointer"
     onClick={() => onEdit(paciente)}
   >
     <td className="p-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-          <Users size={16} className="text-blue-600" />
+        {/* MUDANÇA: Ícone verde */}
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+          <Users size={16} className="text-emerald-600" />
         </div>
         <div>
           <p className="font-bold text-slate-800">{paciente.nome}</p>
@@ -136,6 +142,7 @@ const PacienteRow = ({ paciente, onEdit, onDelete }) => (
     
     <td className="p-4">
       <div className="flex items-center gap-2">
+        {/* MUDANÇA: Status verde */}
         <span className={`px-2 py-1 rounded-full text-xs font-bold ${
           paciente.status === 'ativo' 
             ? 'bg-emerald-100 text-emerald-700'
@@ -153,7 +160,8 @@ const PacienteRow = ({ paciente, onEdit, onDelete }) => (
             e.stopPropagation();
             onEdit(paciente);
           }}
-          className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all border border-blue-200 hover:border-blue-600"
+          // MUDANÇA: Botão editar contorno verde
+          className="p-2 text-emerald-600 hover:text-white hover:bg-emerald-600 rounded-lg transition-all border border-emerald-200 hover:border-emerald-600"
           title="Editar"
         >
           <Edit size={16} />
@@ -218,7 +226,6 @@ export default function Pacientes() {
       }
     } catch (error) {
       console.error(error);
-      // CORREÇÃO AQUI: Passando strings separadas
       showToast("Erro ao carregar pacientes.", "error");
       setPacientes([]); 
     } finally {
@@ -232,7 +239,6 @@ export default function Pacientes() {
 
   const handleSalvar = async (dados) => {
     if (!idDaClinica) {
-      // CORREÇÃO AQUI
       showToast("Clínica não identificada.", "error");
       return;
     }
@@ -243,7 +249,6 @@ export default function Pacientes() {
       const pacienteExistente = await pacienteService.buscarPorCPF(idDaClinica, dados.cpf);
       
       if (pacienteExistente && pacienteExistente.id !== dados.id) {
-        // CORREÇÃO AQUI
         showToast(`O CPF ${mascaraCPF(cpfLimpo)} já está cadastrado para ${pacienteExistente.nome}.`, "error");
         return;
       }
@@ -257,11 +262,9 @@ export default function Pacientes() {
     try {
       if (dados.id) {
         await pacienteService.atualizar(dados.id, payload);
-        // CORREÇÃO AQUI
         showToast("Paciente atualizado com sucesso!", "success");
       } else {
         await pacienteService.criar(payload);
-        // CORREÇÃO AQUI
         showToast("Paciente cadastrado com sucesso!", "success");
       }
       
@@ -270,7 +273,6 @@ export default function Pacientes() {
     } catch (error) {
       console.error(error);
       const msg = error.code === 'permission-denied' ? "Permissão insuficiente." : "Erro ao salvar paciente.";
-      // CORREÇÃO AQUI
       showToast(msg, "error");
     }
   };
@@ -279,12 +281,10 @@ export default function Pacientes() {
     if (window.confirm("Tem certeza que deseja excluir este paciente? Esta ação é irreversível.")) {
       try {
         await pacienteService.excluir(pacienteId); 
-        // CORREÇÃO AQUI
         showToast("Paciente excluído.", "success");
         await fetchPacientes();
       } catch (error) {
         console.error(error);
-        // CORREÇÃO AQUI
         showToast("Erro ao excluir paciente.", "error");
       }
     }
@@ -311,14 +311,16 @@ export default function Pacientes() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6 lg:p-8">
+    // MUDANÇA: Gradiente de fundo verde suave
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
             <div>
               <div className="flex items-center gap-4 mb-3">
-                <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
+                {/* MUDANÇA: Ícone principal verde */}
+                <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-lg">
                   <Users size={28} className="text-white" />
                 </div>
                 <div>
@@ -335,8 +337,9 @@ export default function Pacientes() {
                       <p className="text-sm text-slate-500 font-medium">Total de Pacientes</p>
                       <p className="text-2xl font-bold text-slate-800 mt-1">{stats.total}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-                      <Users className="text-blue-600" size={20} />
+                    {/* MUDANÇA: Ícone stats verde */}
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+                      <Users className="text-emerald-600" size={20} />
                     </div>
                   </div>
                 </div>
@@ -344,6 +347,7 @@ export default function Pacientes() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500 font-medium">Pacientes Ativos</p>
+                      {/* MUDANÇA: Texto verde */}
                       <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.ativos}</p>
                     </div>
                     <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -370,7 +374,8 @@ export default function Pacientes() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleOpenModal(null)}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-lg shadow-blue-500/20 transition-all self-start"
+              // MUDANÇA: Botão principal verde
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-lg shadow-emerald-500/20 transition-all self-start"
             >
               <Plus size={22} /> Novo Paciente
             </motion.button>
@@ -386,16 +391,18 @@ export default function Pacientes() {
                   placeholder="Buscar por nome, e-mail, CPF ou telefone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/30 focus:bg-white transition-all text-slate-700"
+                  // MUDANÇA: Focus ring verde
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-emerald-500/30 focus:bg-white transition-all text-slate-700"
                 />
               </div>
               
               <div className="flex gap-3">
                 <button 
                   onClick={() => setViewMode('grid')}
+                  // MUDANÇA: Botão toggle verde
                   className={`px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${
                     viewMode === 'grid' 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-emerald-600 text-white' 
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -405,7 +412,7 @@ export default function Pacientes() {
                   onClick={() => setViewMode('list')}
                   className={`px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${
                     viewMode === 'list' 
-                      ? 'bg-blue-600 text-white' 
+                      ? 'bg-emerald-600 text-white' 
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -423,7 +430,8 @@ export default function Pacientes() {
         <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
           {loading ? (
             <div className="text-center py-20">
-              <Loader2 size={48} className="animate-spin mx-auto mb-4 text-blue-600" />
+              {/* MUDANÇA: Spinner verde */}
+              <Loader2 size={48} className="animate-spin mx-auto mb-4 text-emerald-600" />
               <p className="text-slate-500 font-medium">Carregando pacientes...</p>
             </div>
           ) : (
@@ -449,7 +457,7 @@ export default function Pacientes() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center py-16"
                       >
-                        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-blue-100 rounded-full flex items-center justify-center">
+                        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-emerald-100 rounded-full flex items-center justify-center">
                           <Users size={40} className="text-slate-400" />
                         </div>
                         <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum paciente encontrado</h3>
@@ -458,7 +466,8 @@ export default function Pacientes() {
                         </p>
                         <button
                           onClick={() => handleOpenModal(null)}
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2"
+                          // MUDANÇA: Botão empty state verde
+                          className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2"
                         >
                           <Plus size={20} /> Cadastrar Primeiro Paciente
                         </button>
@@ -471,7 +480,8 @@ export default function Pacientes() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
+                      {/* MUDANÇA: Header tabela fundo suave verde */}
+                      <tr className="bg-gradient-to-r from-slate-50 to-emerald-50 border-b">
                         <th className="p-4 text-left text-sm font-bold text-slate-700 uppercase">Paciente</th>
                         <th className="p-4 text-left text-sm font-bold text-slate-700 uppercase">Telefone</th>
                         <th className="p-4 text-left text-sm font-bold text-slate-700 uppercase">E-mail</th>
@@ -496,7 +506,7 @@ export default function Pacientes() {
                   
                   {filteredPacientes.length === 0 && (
                     <div className="text-center py-16">
-                      <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-blue-100 rounded-full flex items-center justify-center">
+                      <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-emerald-100 rounded-full flex items-center justify-center">
                         <Users size={40} className="text-slate-400" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum paciente encontrado</h3>
@@ -516,7 +526,8 @@ export default function Pacientes() {
                   </p>
                   {filteredPacientes.length > 0 && (
                     <div className="flex gap-2">
-                      <button className="px-4 py-2 text-slate-600 hover:text-blue-600 text-sm font-medium flex items-center gap-2">
+                      {/* MUDANÇA: Botão exportar hover verde */}
+                      <button className="px-4 py-2 text-slate-600 hover:text-emerald-600 text-sm font-medium flex items-center gap-2">
                         <Download size={16} /> Exportar
                       </button>
                     </div>
@@ -540,7 +551,8 @@ export default function Pacientes() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => handleOpenModal(null)}
-        className="fixed bottom-6 right-6 lg:hidden p-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl z-50"
+        // MUDANÇA: Botão FAB verde
+        className="fixed bottom-6 right-6 lg:hidden p-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full shadow-2xl z-50"
       >
         <Plus size={24} />
       </motion.button>

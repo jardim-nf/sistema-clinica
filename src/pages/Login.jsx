@@ -15,6 +15,14 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // CORREÇÃO 1: Validação antes de ativar o loading
+    // Isso impede que o clique "falso" do autofill trave a tela sem feedback
+    if (!email || !password) {
+      showToast('Por favor, preencha todos os campos.', 'error');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -25,12 +33,12 @@ export default function Login() {
       console.error('Erro no login:', error);
       let message = 'Falha no login. Verifique seu e-mail e senha.';
       
-      if (error.code === 'auth/user-not-found') {
-        message = 'Usuário não encontrado.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        message = 'Usuário ou senha incorretos.';
       } else if (error.code === 'auth/wrong-password') {
         message = 'Senha incorreta.';
       } else if (error.code === 'auth/too-many-requests') {
-        message = 'Muitas tentativas falhas. Tente novamente mais tarde.';
+        message = 'Muitas tentativas. Tente novamente mais tarde.';
       }
 
       showToast(message, 'error');
@@ -43,7 +51,6 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 space-y-8">
         <div className="text-center">
-          {/* MUDANÇA: Nome Sanus e cor Emerald */}
           <h1 className="text-4xl font-extrabold text-emerald-600">Sanus</h1>
           <p className="mt-2 text-xl font-semibold text-slate-700">Acesse sua conta</p>
         </div>
@@ -55,10 +62,11 @@ export default function Login() {
               id="email"
               name="email"
               type="email"
+              // CORREÇÃO 2: autoComplete ajuda o navegador a sincronizar o estado
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              // MUDANÇA: Focus ring verde
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 ease-in-out"
               placeholder="seu.email@exemplo.com"
             />
@@ -70,10 +78,11 @@ export default function Login() {
               id="password"
               name="password"
               type="password"
+              // CORREÇÃO 3: autoComplete para senha
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              // MUDANÇA: Focus ring verde
               className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 transition duration-150 ease-in-out"
               placeholder="••••••••"
             />
@@ -81,7 +90,6 @@ export default function Login() {
             <div className="flex justify-end mt-2">
               <Link 
                 to="/recuperar-senha" 
-                // MUDANÇA: Texto verde
                 className="text-sm font-medium text-emerald-600 hover:text-emerald-800 hover:underline transition-colors"
               >
                 Esqueceu a senha?
@@ -92,7 +100,6 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            // MUDANÇA: Botão verde
             className={`w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-lg text-white font-semibold text-lg transition duration-150 ease-in-out ${
               loading 
                 ? 'bg-emerald-400 cursor-not-allowed' 
@@ -110,7 +117,6 @@ export default function Login() {
 
         <div className="text-center text-sm text-slate-600">
           Não tem uma conta?{' '}
-          {/* MUDANÇA: Link verde */}
           <Link to="/cadastro" className="font-medium text-emerald-600 hover:text-emerald-700 transition-colors">
             Cadastre-se agora
           </Link>

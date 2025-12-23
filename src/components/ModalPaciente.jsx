@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, User, Phone, Mail, Hash, Calendar, ShieldCheck } from 'lucide-react';
 
 export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
-  // Estado inicial do formulário
   const initialFormState = {
     nome: '',
     cpf: '',
@@ -34,7 +33,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
     }
   }, [isOpen, paciente]);
 
-  // --- MÁSCARAS ---
   const mascaraCPF = (value) => {
     return value
       .replace(/\D/g, '')
@@ -68,29 +66,24 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
 
     setFormData(prev => ({ ...prev, [name]: novoValor }));
     
-    // Limpa erro ao digitar
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
   };
 
-  // --- VALIDAÇÃO E ENVIO ---
   const handleSubmit = (e) => {
     e.preventDefault();
     
     const newErrors = {};
 
-    // 1. Nome Obrigatório
     if (!formData.nome.trim()) {
       newErrors.nome = "Nome é obrigatório";
     }
 
-    // 2. Telefone Obrigatório
     if (!formData.telefone.trim()) {
       newErrors.telefone = "Telefone é obrigatório";
     }
     
-    // 3. CPF Obrigatório e com 11 dígitos
     const cpfLimpo = formData.cpf.replace(/\D/g, '');
     if (!cpfLimpo) {
       newErrors.cpf = "CPF é obrigatório";
@@ -98,13 +91,11 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
       newErrors.cpf = "CPF incompleto (digite 11 números)";
     }
 
-    // Se houver erros, para aqui
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Envia dados limpos
     onSave({
       ...formData,
       cpf: formData.cpf.replace(/\D/g, ''),
@@ -150,14 +141,15 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="nome"
                   value={formData.nome}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.nome ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  // MUDANÇA: Focus ring verde
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.nome ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="Ex: João da Silva"
                 />
               </div>
               {errors.nome && <p className="text-xs text-red-500 font-medium">{errors.nome}</p>}
             </div>
 
-            {/* CPF (AGORA OBRIGATÓRIO) */}
+            {/* CPF */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">CPF *</label>
               <div className="relative">
@@ -168,7 +160,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   value={formData.cpf}
                   onChange={handleChange}
                   maxLength={14}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  // MUDANÇA: Focus ring verde
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="000.000.000-00"
                 />
               </div>
@@ -186,7 +179,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   value={formData.telefone}
                   onChange={handleChange}
                   maxLength={15}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.telefone ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  // MUDANÇA: Focus ring verde
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.telefone ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="(00) 00000-0000"
                 />
               </div>
@@ -203,7 +197,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
+                  // MUDANÇA: Focus ring verde
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
                   placeholder="exemplo@email.com"
                 />
               </div>
@@ -219,7 +214,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="dataNascimento"
                   value={formData.dataNascimento}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all text-slate-600"
+                  // MUDANÇA: Focus ring verde
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all text-slate-600"
                 />
               </div>
             </div>
@@ -233,7 +229,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all appearance-none text-slate-600"
+                  // MUDANÇA: Focus ring verde
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all appearance-none text-slate-600"
                 >
                   <option value="ativo">Ativo</option>
                   <option value="inativo">Inativo</option>
@@ -249,7 +246,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                 value={formData.observacoes}
                 onChange={handleChange}
                 rows="3"
-                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all resize-none"
+                // MUDANÇA: Focus ring verde
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all resize-none"
                 placeholder="Histórico médico breve ou observações importantes..."
               />
             </div>
@@ -269,7 +267,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
           <button
             type="submit"
             form="pacienteForm"
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2"
+            // MUDANÇA: Botão salvar verde
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2"
           >
             <Save size={18} />
             {paciente ? 'Salvar Alterações' : 'Cadastrar Paciente'}

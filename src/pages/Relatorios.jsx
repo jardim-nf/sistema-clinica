@@ -115,8 +115,102 @@ export default function Relatorios() {
 
   const COLORS = ['#10b981', '#14b8a6', '#f59e0b', '#ef4444']; // Emerald, Teal, Amber, Red
 
-  const baixarPDF = async () => { /* Mesma lógica do PDF, só mudando cores internas se necessário */ };
-  const enviarWhatsApp = () => { /* Mesma lógica */ };
+  const baixarPDF = async () => {
+    try {
+      const doc = new jsPDF();
+      const nomeClinica = userData?.nomeClinica || "CLÍNICA MÉDICA";
+      const medicoNome = filtroMedico ? listaMedicos.find(m => m.id === filtroMedico)?.nome : "Todos";
+      
+      // MUDANÇA: Cor do texto do PDF para Verde (Sanus)
+      doc.setFontSize(22);
+      doc.setTextColor(16, 185, 129); // #10b981 (Emerald-500)
+      doc.text("RELATÓRIO FINANCEIRO", 105, 20, { align: "center" });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(nomeClinica, 105, 28, { align: "center" });
+      doc.text(`Médico: ${medicoNome}`, 105, 33, { align: "center" });
+      doc.text(`Gerado em: ${new Date().toLocaleString()}`, 105, 38, { align: "center" });
+      
+      doc.setDrawColor(200);
+      doc.line(14, 42, 196, 42);
+
+      const metrics = [
+        ["Faturamento Total", formatarMoeda(resumo.total)],
+        ["Total de Consultas", String(resumo.qtd || 0)],
+        ["Ticket Médio", formatarMoeda(resumo.ticketMedio)],
+        ["Faturamento Mês Atual", formatarMoeda(resumo.faturamentoMes)],
+        ["Pacientes Ativos (30d)", String(resumo.pacientesAtivos30Dias || 0)]
+      ];
+      
+      doc.setFontSize(14);
+      doc.setTextColor(40);
+      doc.text("Resumo Geral", 14, 52);
+
+      autoTable(doc, {
+        startY: 56,
+        head: [['Indicador', 'Valor']],
+        body: metrics,
+        theme: 'striped',
+        // MUDANÇA: Cabeçalho da tabela do PDF em Verde
+        headStyles: { fillColor: [16, 185, 129] }, 
+        styles: { fontSize: 11, cellPadding: 3 }
+      });
+      
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.text("Detalhamento de Consultas", 14, 20);
+      
+      const tableData = transacoes.slice(0, 100).map(t => [
+        t.dataCompleta.toLocaleDateString('pt-BR'),
+        t.pacienteNome?.substring(0, 25) || 'Não inf.',
+        t.tipo || 'Consulta',
+        t.status || '-',
+        formatarMoeda(t.valorFloat)
+      ]);
+      
+      autoTable(doc, {
+        startY: 25,
+        head: [['Data', 'Paciente', 'Tipo', 'Status', 'Valor']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59] },
+        columnStyles: { 4: { halign: 'right' } }
+      });
+      
+      if (showChart && document.getElementById('main-chart')) {
+        try {
+          const chartElement = document.getElementById('main-chart');
+          const canvas = await html2canvas(chartElement, { scale: 1.5, backgroundColor: '#ffffff' });
+          const imgData = canvas.toDataURL('image/png');
+          const pdfWidth = doc.internal.pageSize.getWidth() - 28;
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          
+          doc.addPage();
+          doc.text("Análise Gráfica", 14, 20);
+          doc.addImage(imgData, 'PNG', 14, 30, pdfWidth, pdfHeight);
+        } catch (e) {
+          console.warn("Gráfico não gerado no PDF:", e);
+        }
+      }
+      
+      doc.save(`Relatorio_${nomeClinica.replace(/\s+/g, '_')}.pdf`);
+      
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Houve um erro ao gerar o PDF. Verifique o console.');
+    }
+  };
+
+  const enviarWhatsApp = () => {
+    const medicoNome = filtroMedico ? listaMedicos.find(m => m.id === filtroMedico)?.nome : "Geral";
+    const msg = `*📊 RELATÓRIO (${medicoNome}) - ${userData?.nomeClinica || 'CLÍNICA'}*\n` +
+                `💰 Faturamento: ${formatarMoeda(resumo.faturamentoMes)} (Mês)\n` +
+                `📅 Consultas: ${resumo.consultasMes} (Mês)\n` +
+                `👥 Pacientes Ativos: ${resumo.pacientesAtivos30Dias}\n` +
+                `📈 Total Acumulado: ${formatarMoeda(resumo.total)}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  };
 
   const StatCard = ({ title, value, icon: Icon, color, trend, description }) => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
@@ -145,7 +239,6 @@ export default function Relatorios() {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
             <div className="flex items-center gap-4">
-               {/* MUDANÇA: Gradiente Verde */}
                 <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/20">
                   <BarChart3 size={24} className="text-white" />
                 </div>
@@ -155,9 +248,11 @@ export default function Relatorios() {
                 </div>
             </div>
             <div className="flex gap-4">
-               {/* MUDANÇA: Botões verdes */}
               <button onClick={baixarPDF} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 transition-all active:scale-95">
                 <Download size={20} /> Gerar PDF
+              </button>
+              <button onClick={enviarWhatsApp} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 transition-all active:scale-95">
+                <Share2 size={20} /> Compartilhar
               </button>
             </div>
           </div>
@@ -199,14 +294,12 @@ export default function Relatorios() {
                         <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} tickFormatter={(v) => `R$${v/1000}k`} />
                         <Tooltip formatter={(value) => [formatarMoeda(value), 'Valor']} />
-                        {/* MUDANÇA: Linha do gráfico Verde */}
                         <Line type="monotone" dataKey="valor" stroke="#10b981" strokeWidth={3} dot={{r:4, strokeWidth:2, stroke:'#fff'}} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
-                {/* ... Gráfico de Pizza (Cores ajustadas no array COLORS acima) ... */}
-                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                   <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
                     <Users size={20} className="text-teal-600" />
                     Status dos Agendamentos
@@ -245,8 +338,7 @@ export default function Relatorios() {
           </>
         ) : (
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-             {/* ... Tabela (Mesma lógica, cores de status ajustadas no CSS inline do span) ... */}
-              <div className="p-6 border-b border-slate-100">
+             <div className="p-6 border-b border-slate-100">
                <h3 className="font-bold text-lg text-slate-800">Histórico Completo</h3>
              </div>
              <div className="overflow-x-auto">
@@ -273,7 +365,8 @@ export default function Relatorios() {
                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                            ['realizado', 'concluido'].includes(t.status?.toLowerCase()) ? 'bg-emerald-100 text-emerald-700' :
                            ['cancelado'].includes(t.status?.toLowerCase()) ? 'bg-red-100 text-red-700' :
-                           'bg-blue-100 text-blue-700'
+                           // MUDANÇA: O último badge azul foi trocado por teal
+                           'bg-teal-100 text-teal-700'
                          }`}>
                            {t.status}
                          </span>

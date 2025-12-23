@@ -1,13 +1,14 @@
-// src/components/Layout.jsx - Com Melhorias de UX (Menu Ativo e Loading Global)
+// src/components/Layout.jsx - Com Melhorias de UX e Menu de Médicos Adicionado
 
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom'; 
 import { useAuth } from '../contexts/AuthContext'; 
 import { 
     LayoutDashboard, Calendar, Users, FileText, Settings, LogOut, BarChart, Menu, X, DollarSign,
-    Building, // NOVO: Para Gestão de Clínicas
-    Gavel, // NOVO: Para Controle Master/Bloqueios
-    Loader2 // ADICIONADO: Para o loading global
+    Building, // Gestão de Clínicas
+    Gavel, // Controle Master/Bloqueios
+    Loader2, // Loading global
+    Stethoscope // <--- NOVO ÍCONE PARA MÉDICOS
 } from 'lucide-react'; 
 
 // --- Componente SidebarItem com Destaque Forte ---
@@ -43,7 +44,7 @@ const GlobalLoadingScreen = () => (
 
 
 export default function Layout({ children }) {
-    // ADICIONADO: isLoading do AuthContext para o loading global
+    // isLoading do AuthContext para o loading global
     const { logout, userData, isLoading } = useAuth(); 
     const navigate = useNavigate();
     const location = useLocation();
@@ -57,6 +58,10 @@ export default function Layout({ children }) {
         // ITENS DA CLÍNICA ESPECÍFICA
         { icon: Calendar, text: 'Agenda', path: '/agenda', roles: ['admin', 'secretaria'] },
         { icon: Users, text: 'Pacientes', path: '/pacientes', roles: ['admin', 'secretaria'] },
+        
+        // --- NOVO ITEM DE MÉDICOS (ADICIONADO) ---
+        { icon: Stethoscope, text: 'Corpo Clínico', path: '/medicos', roles: ['admin', 'secretaria'] }, 
+
         { icon: FileText, text: 'Prontuários', path: '/prontuarios', roles: ['admin'] }, 
         { icon: DollarSign, text: 'Financeiro', path: '/financeiro', roles: ['admin'] },
         { icon: BarChart, text: 'Relatórios', path: '/relatorios', roles: ['admin'] },

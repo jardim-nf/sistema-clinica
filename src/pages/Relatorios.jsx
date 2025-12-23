@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { db } from '../services/firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
+import { medicoService } from '../services/medicoService'; // <--- IMPORTADO
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { 
   FileText, Download, Share2, TrendingUp, DollarSign, Calendar, Clock,
   BarChart3, Filter, Users, ArrowUpRight, ArrowDownRight, Target, RefreshCw,
-  CheckCircle, XCircle, Eye, EyeOff, CalendarDays, Activity
+  CheckCircle, XCircle, Eye, EyeOff, CalendarDays, Activity, Stethoscope
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -19,6 +20,12 @@ import html2canvas from "html2canvas";
 
 export default function Relatorios() {
   const { user, userData } = useAuth();
+  
+  // Dados brutos carregados do banco
+  const [dadosOriginais, setDadosOriginais] = useState([]);
+  const [listaMedicos, setListaMedicos] = useState([]);
+
+  // Dados filtrados exibidos na tela
   const [transacoes, setTransacoes] = useState([]);
   const [resumo, setResumo] = useState({ 
     total: 0, 
@@ -30,65 +37,47 @@ export default function Relatorios() {
     consultasMes: 0,
     faturamentoMes: 0
   });
+
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [viewType, setViewType] = useState('overview');
   const [showChart, setShowChart] = useState(true);
-  const [filters, setFilters] = useState({
-    status: 'all',
-    tipo: 'all',
-    medico: 'all'
-  });
+  
+  // Filtros
+  const [filtroMedico, setFiltroMedico] = useState(''); // <--- NOVO ESTADO
 
-  // Garante que temos um ID para buscar (da clínica ou do usuário logado)
   const clinicaId = userData?.clinicaId || user?.uid;
 
+  // 1. CARREGAR DADOS INICIAIS (Agendamentos + Médicos)
   useEffect(() => {
-    async function carregarDados() {
+    async function carregarDadosIniciais() {
       if (!user || !clinicaId) return;
       
       setLoading(true);
       try {
-        // 1. Buscar todas as consultas
+        // Busca Agendamentos
         const consultasQuery = query(
           collection(db, "agendamentos"), 
           where("clinicaId", "==", clinicaId)
         );
-        const consultasSnapshot = await getDocs(consultasQuery);
         
-        let somaTotal = 0;
-        const hoje = new Date();
-        const trintaDiasAtras = new Date();
-        trintaDiasAtras.setDate(hoje.getDate() - 30);
+        // Busca Médicos e Agendamentos em paralelo
+        const [consultasSnapshot, medicosData] = await Promise.all([
+            getDocs(consultasQuery),
+            medicoService.listar(clinicaId)
+        ]);
 
-        const pacientesUnicosGeral = new Set();
-        const pacientesUnicos30Dias = new Set();
-        
-        let qtdMesAtual = 0;
-        let fatMesAtual = 0;
-        let fatMesAnterior = 0;
+        setListaMedicos(medicosData); // Salva médicos
 
-        // Datas para comparação de mês
-        const mesAtual = hoje.getMonth();
-        const anoAtual = hoje.getFullYear();
-        const dataMesAnterior = new Date();
-        dataMesAnterior.setMonth(mesAtual - 1);
-        
-        const lista = consultasSnapshot.docs.map(doc => {
+        // Processa os dados brutos UMA VEZ
+        const listaProcessada = consultasSnapshot.docs.map(doc => {
           const data = doc.data();
           
-          // --- TRATAMENTO ROBUSTO DE VALORES ---
           let valorFloat = 0;
           if (data.valor) {
              const valorString = String(data.valor).replace('R$', '').trim();
-             // Remove pontos de milhar e troca vírgula por ponto
              valorFloat = parseFloat(valorString.replace(/\./g, '').replace(',', '.')) || 0;
           }
           
-          somaTotal += valorFloat;
-
-          // --- TRATAMENTO DE DATAS ---
-          // Verifica se é timestamp do firestore ou string
           let dataCompleta;
           if (data.start?.toDate) {
              dataCompleta = data.start.toDate(); 
@@ -98,23 +87,6 @@ export default function Relatorios() {
              dataCompleta = new Date();
           }
 
-          // Identificação do Paciente
-          const idPaciente = data.pacienteId || data.pacienteNome || 'Anônimo';
-          
-          // Lógica de Pacientes
-          pacientesUnicosGeral.add(idPaciente);
-          if (dataCompleta >= trintaDiasAtras) {
-            pacientesUnicos30Dias.add(idPaciente);
-          }
-
-          // Lógica de Mês Atual vs Anterior
-          if (dataCompleta.getMonth() === mesAtual && dataCompleta.getFullYear() === anoAtual) {
-            qtdMesAtual++;
-            fatMesAtual += valorFloat;
-          } else if (dataCompleta.getMonth() === dataMesAnterior.getMonth() && dataCompleta.getFullYear() === dataMesAnterior.getFullYear()) {
-            fatMesAnterior += valorFloat;
-          }
-
           return {
             id: doc.id,
             ...data,
@@ -122,43 +94,93 @@ export default function Relatorios() {
             dataCompleta,
             pacienteNome: data.pacienteNome || 'Paciente',
             status: data.status || 'pendente',
-            tipo: data.tipo || 'Consulta'
+            tipo: data.tipo || 'Consulta',
+            medicoId: data.medicoId || '' // Garante que tem o ID
           };
         });
 
-        // Ordenar por data (mais recente primeiro)
-        lista.sort((a, b) => b.dataCompleta - a.dataCompleta);
+        // Ordenar por data
+        listaProcessada.sort((a, b) => b.dataCompleta - a.dataCompleta);
 
-        // Cálculo de crescimento
-        let crescimento = 0;
-        if (fatMesAnterior > 0) {
-          crescimento = Math.round(((fatMesAtual - fatMesAnterior) / fatMesAnterior) * 100);
-        } else if (fatMesAtual > 0) {
-          crescimento = 100;
-        }
-
-        setTransacoes(lista);
-        setResumo({
-          total: somaTotal,
-          qtd: lista.length,
-          ticketMedio: lista.length > 0 ? somaTotal / lista.length : 0,
-          crescimento,
-          pacientesAtivos: pacientesUnicosGeral.size, // Total histórico
-          pacientesAtivos30Dias: pacientesUnicos30Dias.size, // Ativos reais (30d)
-          consultasMes: qtdMesAtual,
-          faturamentoMes: fatMesAtual,
-          faturamentoMesAnterior: fatMesAnterior
-        });
+        setDadosOriginais(listaProcessada); // Salva na memória
 
       } catch (error) {
-        console.error("Erro ao carregar relatório:", error);
+        console.error("Erro ao carregar dados:", error);
       } finally {
         setLoading(false);
       }
     }
     
-    carregarDados();
+    carregarDadosIniciais();
   }, [user, clinicaId]);
+
+  // 2. FILTRAGEM E CÁLCULO DE RESUMO
+  // Roda sempre que mudar o filtro de médico ou quando os dados chegarem
+  useEffect(() => {
+      if (!dadosOriginais) return;
+
+      // Filtra pelo médico se houver seleção
+      const listaFiltrada = filtroMedico 
+        ? dadosOriginais.filter(item => item.medicoId === filtroMedico)
+        : dadosOriginais;
+
+      // --- CÁLCULOS (Baseados na listaFiltrada) ---
+      let somaTotal = 0;
+      const hoje = new Date();
+      const trintaDiasAtras = new Date();
+      trintaDiasAtras.setDate(hoje.getDate() - 30);
+
+      const pacientesUnicosGeral = new Set();
+      const pacientesUnicos30Dias = new Set();
+      
+      let qtdMesAtual = 0;
+      let fatMesAtual = 0;
+      let fatMesAnterior = 0;
+
+      const mesAtual = hoje.getMonth();
+      const anoAtual = hoje.getFullYear();
+      const dataMesAnterior = new Date();
+      dataMesAnterior.setMonth(mesAtual - 1);
+
+      listaFiltrada.forEach(item => {
+          somaTotal += item.valorFloat;
+
+          const idPaciente = item.pacienteId || item.pacienteNome || 'Anônimo';
+          pacientesUnicosGeral.add(idPaciente);
+          
+          if (item.dataCompleta >= trintaDiasAtras) {
+            pacientesUnicos30Dias.add(idPaciente);
+          }
+
+          if (item.dataCompleta.getMonth() === mesAtual && item.dataCompleta.getFullYear() === anoAtual) {
+            qtdMesAtual++;
+            fatMesAtual += item.valorFloat;
+          } else if (item.dataCompleta.getMonth() === dataMesAnterior.getMonth() && item.dataCompleta.getFullYear() === dataMesAnterior.getFullYear()) {
+            fatMesAnterior += item.valorFloat;
+          }
+      });
+
+      let crescimento = 0;
+      if (fatMesAnterior > 0) {
+        crescimento = Math.round(((fatMesAtual - fatMesAnterior) / fatMesAnterior) * 100);
+      } else if (fatMesAtual > 0) {
+        crescimento = 100;
+      }
+
+      setTransacoes(listaFiltrada); // Atualiza a tabela/gráficos
+      setResumo({
+        total: somaTotal,
+        qtd: listaFiltrada.length,
+        ticketMedio: listaFiltrada.length > 0 ? somaTotal / listaFiltrada.length : 0,
+        crescimento,
+        pacientesAtivos: pacientesUnicosGeral.size,
+        pacientesAtivos30Dias: pacientesUnicos30Dias.size,
+        consultasMes: qtdMesAtual,
+        faturamentoMes: fatMesAtual,
+        faturamentoMesAnterior: fatMesAnterior
+      });
+
+  }, [dadosOriginais, filtroMedico]); // <-- Dependências do efeito
 
   const formatarMoeda = (val) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -169,8 +191,8 @@ export default function Relatorios() {
     }).format(val || 0);
   };
 
-  // Dados para gráficos
-  const dadosMensais = Array.from({ length: 6 }, (_, i) => {
+  // Gráficos usam 'transacoes' (que já está filtrado)
+  const dadosMensais = useMemo(() => Array.from({ length: 6 }, (_, i) => {
     const data = new Date();
     data.setMonth(data.getMonth() - (5 - i));
     
@@ -184,7 +206,7 @@ export default function Relatorios() {
       valor: mesTransacoes.reduce((acc, curr) => acc + curr.valorFloat, 0),
       consultas: mesTransacoes.length
     };
-  });
+  }), [transacoes]);
 
   const dadosStatus = [
     { name: 'Realizadas', value: transacoes.filter(t => ['realizado', 'Realizado', 'concluido'].includes(t.status)).length },
@@ -195,13 +217,12 @@ export default function Relatorios() {
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
-  // --- GERAR PDF BLINDADO ---
   const baixarPDF = async () => {
     try {
       const doc = new jsPDF();
       const nomeClinica = userData?.nomeClinica || "CLÍNICA MÉDICA";
+      const medicoNome = filtroMedico ? listaMedicos.find(m => m.id === filtroMedico)?.nome : "Todos";
       
-      // Cabeçalho
       doc.setFontSize(22);
       doc.setTextColor(59, 130, 246);
       doc.text("RELATÓRIO FINANCEIRO", 105, 20, { align: "center" });
@@ -209,12 +230,12 @@ export default function Relatorios() {
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(nomeClinica, 105, 28, { align: "center" });
-      doc.text(`Gerado em: ${new Date().toLocaleString()}`, 105, 33, { align: "center" });
+      doc.text(`Médico: ${medicoNome}`, 105, 33, { align: "center" }); // Adicionado no PDF
+      doc.text(`Gerado em: ${new Date().toLocaleString()}`, 105, 38, { align: "center" });
       
       doc.setDrawColor(200);
-      doc.line(14, 38, 196, 38);
+      doc.line(14, 42, 196, 42);
 
-      // Métricas principais (Com proteção contra NULL/Undefined)
       const metrics = [
         ["Faturamento Total", formatarMoeda(resumo.total)],
         ["Total de Consultas", String(resumo.qtd || 0)],
@@ -225,10 +246,10 @@ export default function Relatorios() {
       
       doc.setFontSize(14);
       doc.setTextColor(40);
-      doc.text("Resumo Geral", 14, 48);
+      doc.text("Resumo Geral", 14, 52);
 
       autoTable(doc, {
-        startY: 52,
+        startY: 56,
         head: [['Indicador', 'Valor']],
         body: metrics,
         theme: 'striped',
@@ -236,7 +257,6 @@ export default function Relatorios() {
         styles: { fontSize: 11, cellPadding: 3 }
       });
       
-      // Tabela de transações
       doc.addPage();
       doc.setFontSize(14);
       doc.text("Detalhamento de Consultas", 14, 20);
@@ -258,18 +278,16 @@ export default function Relatorios() {
         columnStyles: { 4: { halign: 'right' } }
       });
       
-      // Tentar capturar gráfico
       if (showChart && document.getElementById('main-chart')) {
         try {
           const chartElement = document.getElementById('main-chart');
           const canvas = await html2canvas(chartElement, { scale: 1.5, backgroundColor: '#ffffff' });
           const imgData = canvas.toDataURL('image/png');
-          
-          doc.addPage();
-          doc.text("Análise Gráfica", 14, 20);
           const pdfWidth = doc.internal.pageSize.getWidth() - 28;
           const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
           
+          doc.addPage();
+          doc.text("Análise Gráfica", 14, 20);
           doc.addImage(imgData, 'PNG', 14, 30, pdfWidth, pdfHeight);
         } catch (e) {
           console.warn("Gráfico não gerado no PDF:", e);
@@ -284,9 +302,9 @@ export default function Relatorios() {
     }
   };
 
-  // Enviar WhatsApp
   const enviarWhatsApp = () => {
-    const msg = `*📊 RELATÓRIO - ${userData?.nomeClinica || 'CLÍNICA'}*\n` +
+    const medicoNome = filtroMedico ? listaMedicos.find(m => m.id === filtroMedico)?.nome : "Geral";
+    const msg = `*📊 RELATÓRIO (${medicoNome}) - ${userData?.nomeClinica || 'CLÍNICA'}*\n` +
                 `💰 Faturamento: ${formatarMoeda(resumo.faturamentoMes)} (Mês)\n` +
                 `📅 Consultas: ${resumo.consultasMes} (Mês)\n` +
                 `👥 Pacientes Ativos: ${resumo.pacientesAtivos30Dias}\n` +
@@ -294,7 +312,6 @@ export default function Relatorios() {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // Componente de Card
   const StatCard = ({ title, value, icon: Icon, color, trend, description }) => (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -361,13 +378,13 @@ export default function Relatorios() {
           </div>
 
           {/* Navegação e Filtros */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-sm p-2 mb-8">
-            <div className="flex gap-2">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-sm p-3 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex gap-2 w-full md:w-auto">
               {['overview', 'transactions'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setViewType(tab)}
-                  className={`flex-1 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  className={`flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
                     viewType === tab
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
                       : 'text-slate-600 hover:bg-slate-100'
@@ -376,6 +393,25 @@ export default function Relatorios() {
                   {tab === 'overview' ? 'Visão Geral' : 'Transações'}
                 </button>
               ))}
+            </div>
+
+            {/* --- FILTRO DE MÉDICO --- */}
+            <div className="relative w-full md:w-80">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <Stethoscope size={18} />
+                </div>
+                <select 
+                    value={filtroMedico}
+                    onChange={(e) => setFiltroMedico(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all appearance-none cursor-pointer"
+                >
+                    <option value="">Todos os Médicos</option>
+                    {listaMedicos.map(medico => (
+                        <option key={medico.id} value={medico.id}>
+                            Dr(a). {medico.nome}
+                        </option>
+                    ))}
+                </select>
             </div>
           </div>
         </div>
@@ -394,7 +430,7 @@ export default function Relatorios() {
                 value={formatarMoeda(resumo.total)}
                 icon={DollarSign}
                 color="text-emerald-600"
-                description="Acumulado histórico"
+                description={filtroMedico ? "Acumulado (Médico)" : "Acumulado histórico"}
               />
               <StatCard 
                 title="Consultas (Mês)"
@@ -421,7 +457,7 @@ export default function Relatorios() {
             </div>
 
             {/* Gráficos */}
-            {transacoes.length > 0 && (
+            {transacoes.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 <div id="main-chart" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                   <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
@@ -468,14 +504,19 @@ export default function Relatorios() {
                     <div className="flex flex-wrap justify-center gap-4 mt-4">
                       {dadosStatus.map((entry, index) => (
                          <div key={entry.name} className="flex items-center gap-2 text-sm text-slate-600">
-                            <div className="w-3 h-3 rounded-full" style={{backgroundColor: COLORS[index % COLORS.length]}}></div>
-                            {entry.name}: {entry.value}
+                           <div className="w-3 h-3 rounded-full" style={{backgroundColor: COLORS[index % COLORS.length]}}></div>
+                           {entry.name}: {entry.value}
                          </div>
                       ))}
                     </div>
                   </div>
                 </div>
               </div>
+            ) : (
+                <div className="col-span-full py-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-100">
+                    <Filter size={48} className="mx-auto mb-4 opacity-20"/>
+                    <p>Nenhum dado encontrado para este filtro.</p>
+                </div>
             )}
           </>
         ) : (
@@ -489,6 +530,7 @@ export default function Relatorios() {
                    <tr>
                      <th className="p-4">Data</th>
                      <th className="p-4">Paciente</th>
+                     <th className="p-4">Tipo</th>
                      <th className="p-4">Status</th>
                      <th className="p-4 text-right">Valor</th>
                    </tr>
@@ -497,7 +539,11 @@ export default function Relatorios() {
                    {transacoes.slice(0, 50).map((t) => (
                      <tr key={t.id} className="hover:bg-slate-50 transition-colors">
                        <td className="p-4">{t.dataCompleta.toLocaleDateString()}</td>
-                       <td className="p-4 font-medium text-slate-800">{t.pacienteNome}</td>
+                       <td className="p-4 font-medium text-slate-800">
+                          {t.pacienteNome}
+                          {t.medicoNome && <div className="text-xs text-slate-400">Dr(a). {t.medicoNome}</div>}
+                       </td>
+                       <td className="p-4">{t.tipo}</td>
                        <td className="p-4">
                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                            ['realizado', 'concluido'].includes(t.status?.toLowerCase()) ? 'bg-emerald-100 text-emerald-700' :
@@ -512,6 +558,9 @@ export default function Relatorios() {
                    ))}
                  </tbody>
                </table>
+               {transacoes.length === 0 && (
+                   <div className="p-8 text-center text-slate-400">Nenhum registro encontrado.</div>
+               )}
              </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-// src/App.jsx - Versão Completa
+// src/App.jsx - Versão Corrigida
 
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro'; 
-import RecuperarSenha from './pages/RecuperarSenha'; // <--- IMPORTAÇÃO ADICIONADA
+import RecuperarSenha from './pages/RecuperarSenha';
 
 // --- IMPORTS DE PÁGINAS DA CLÍNICA ---
 import Dashboard from './pages/Dashboard';
@@ -19,6 +19,7 @@ import Prontuario from './pages/Prontuario';
 import Configuracoes from './pages/Configuracoes';
 import Relatorios from './pages/Relatorios'; 
 import Financeiro from './pages/Financeiro';
+import Medicos from './pages/Medicos'; // <--- IMPORTAÇÃO QUE FALTAVA
 
 // --- IMPORTS ADMIN (SUPER_ADMIN) ---
 import DashboardMaster from './pages/Admin/DashBoardMaster';
@@ -59,6 +60,9 @@ const RotasInternas = () => {
                 <Route path="/relatorios" element={<Relatorios />} />
                 <Route path="/config" element={<Configuracoes />} />
                 <Route path="/financeiro" element={<Financeiro />} />
+                
+                {/* ROTA DE MÉDICOS (Corrigida: sem wrapper redundante) */}
+                <Route path="/medicos" element={<Medicos />} /> 
 
                 {/* ROTAS DO ADMINISTRADOR GERAL (SUPER_ADMIN) */}
                 <Route path="/super/clinicas" element={<Clinicas />} />
@@ -88,7 +92,7 @@ function App() {
             {/* --- ROTAS PÚBLICAS --- */}
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} /> 
-            <Route path="/recuperar-senha" element={<RecuperarSenha />} /> {/* <--- ROTA ADICIONADA */}
+            <Route path="/recuperar-senha" element={<RecuperarSenha />} />
 
             {/* --- ROTAS PRIVADAS --- */}
             <Route path="/*" element={

@@ -8,13 +8,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { agendaService } from '../services/agendaService';
 import { pacienteService } from '../services/pacienteService';
+import { medicoService } from '../services/medicoService';
 import ModalAgendamento from '../components/ModalAgendamento';
 
 import { format, parseISO, addHours, isWithinInterval } from 'date-fns';
 import { 
-  Loader2, Plus, Calendar as CalendarIcon, Filter, 
-  ChevronLeft, ChevronRight, Menu, X, 
-  Clock, User, Phone, AlertCircle
+  Loader2, Plus, Calendar as CalendarIcon, 
+  ChevronLeft, ChevronRight, Menu, 
+  Clock, Phone
 } from 'lucide-react';
 
 export default function Agenda() {
@@ -23,6 +24,7 @@ export default function Agenda() {
 
   const [eventos, setEventos] = useState([]);
   const [pacientes, setPacientes] = useState([]);
+  const [medicos, setMedicos] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [dadosModal, setDadosModal] = useState(null);
@@ -36,9 +38,10 @@ export default function Agenda() {
     if (!idDaClinica) return;
     setLoading(true);
     try {
-      const [listaAgenda, listaPacientes] = await Promise.all([
+      const [listaAgenda, listaPacientes, listaMedicos] = await Promise.all([
         agendaService.listar(idDaClinica),
-        pacienteService.listar(idDaClinica)
+        pacienteService.listar(idDaClinica),
+        medicoService.listar(idDaClinica)
       ]);
 
       const eventosFormatados = listaAgenda.map(evt => ({
@@ -55,8 +58,11 @@ export default function Agenda() {
 
       setEventos(eventosFormatados);
       setPacientes(listaPacientes);
+      setMedicos(listaMedicos);
     } catch (error) {
-      showToast({ message: "Erro ao carregar dados.", type: "error" });
+      console.error(error);
+      // CORREÇÃO: Passando argumentos separados
+      showToast("Erro ao carregar dados.", "error");
     } finally {
       setLoading(false);
     }
@@ -120,6 +126,7 @@ export default function Agenda() {
       data: format(info.start, 'yyyy-MM-dd'),
       hora: format(info.start, 'HH:mm'),
       pacienteId: '',
+      medicoId: '', 
       status: 'pendente'
     });
     setModalOpen(true);
@@ -131,7 +138,8 @@ export default function Agenda() {
     const novoEnd = event.end || addHours(novoStart, 1);
 
     if (verificarConflito(novoStart, novoEnd, event.id)) {
-      showToast({ message: "Conflito de horário detectado.", type: "error" });
+      // CORREÇÃO
+      showToast("Conflito de horário detectado.", "error");
       info.revert();
       return;
     }
@@ -141,21 +149,16 @@ export default function Agenda() {
         start: novoStart.toISOString(),
         end: novoEnd.toISOString()
       });
-      showToast({ message: "Reagendado!", type: "success" });
+      // CORREÇÃO
+      showToast("Reagendado!", "success");
     } catch (error) {
       info.revert();
-      showToast({ message: "Erro ao atualizar.", type: "error" });
+      // CORREÇÃO
+      showToast("Erro ao atualizar.", "error");
     }
   };
 
-// Dentro de Agenda.jsx
-
-const handleSalvar = async (dados) => {
-    // 1. DEBUG: Vamos ver o que tem no userData no console
-    console.log("=== DEBUG SALVAR ===");
-    console.log("UserData completo:", userData);
-
-    // Tenta pegar o ID de várias formas possíveis (Firebase usa uid, SQL usa id, etc)
+  const handleSalvar = async (dados) => {
     const usuarioId = userData?.id || userData?.uid || userData?.clinicaId;
 
     if (!usuarioId) {
@@ -168,7 +171,7 @@ const handleSalvar = async (dados) => {
     const end = addHours(start, 1);
 
     if (verificarConflito(start, end, dados.id)) {
-      alert("Este horário já está ocupado."); // Fallback simples
+      alert("Este horário já está ocupado."); 
       return;
     }
 
@@ -181,13 +184,10 @@ const handleSalvar = async (dados) => {
         start: start.toISOString(),
         end: end.toISOString(),
         clinicaId: idDaClinica,
-        // ENVIANDO O ID COM OS DOIS NOMES PARA GARANTIR
         userId: usuarioId, 
         donoId: usuarioId,
         updatedAt: new Date().toISOString()
       };
-
-      console.log("Payload sendo enviado:", payload); // Debug do envio
 
       if (dados.id) await agendaService.atualizar(dados.id, payload);
       else await agendaService.criar(payload);
@@ -196,17 +196,31 @@ const handleSalvar = async (dados) => {
       setDadosModal(null);
       carregarDados();
       
-      // Tenta usar o Toast, se falhar usa alert
       if (typeof showToast === 'function') {
-        showToast({ message: "Salvo com sucesso!", type: "success" });
-      } else {
-        // Fallback temporário até arrumarmos o Context
-        // alert("Agendamento salvo com sucesso!"); 
+        // CORREÇÃO AQUI (Onde estava dando erro ao salvar)
+        showToast("Salvo com sucesso!", "success");
       }
 
     } catch (error) {
       console.error("Erro no catch:", error);
       alert("Erro ao salvar: " + (error.message || "Erro desconhecido"));
+    }
+  };
+
+  const handleExcluir = async (id) => {
+    if (!window.confirm("Tem certeza que deseja excluir este agendamento?")) return;
+
+    try {
+      await agendaService.excluir(id);
+      // CORREÇÃO
+      showToast("Agendamento excluído com sucesso!", "success");
+      setModalOpen(false);
+      setDadosModal(null);
+      carregarDados(); 
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      // CORREÇÃO
+      showToast("Erro ao excluir agendamento.", "error");
     }
   };
 
@@ -272,6 +286,7 @@ const handleSalvar = async (dados) => {
                 data: format(selectedDate, 'yyyy-MM-dd'),
                 hora: '09:00',
                 pacienteId: '',
+                medicoId: '',
                 status: 'pendente'
               });
               setModalOpen(true);
@@ -321,6 +336,12 @@ const handleSalvar = async (dados) => {
                     {evento.title}
                   </h4>
                   
+                  {evento.extendedProps.medicoNome && (
+                    <p className="text-xs text-blue-600 font-medium mb-1">
+                      Dr(a). {evento.extendedProps.medicoNome}
+                    </p>
+                  )}
+
                   {evento.extendedProps.observacoes && (
                     <p className="text-sm text-slate-600 line-clamp-2">
                       {evento.extendedProps.observacoes}
@@ -375,7 +396,6 @@ const handleSalvar = async (dados) => {
         .fc-event { border-radius: 8px !important; padding: 2px 4px !important; }
         .fc-event-title { font-size: 0.75rem; font-weight: 600; }
         
-        /* Mobile optimizations */
         @media (max-width: 768px) {
           .fc .fc-header-toolbar { 
             flex-direction: column; 
@@ -397,7 +417,6 @@ const handleSalvar = async (dados) => {
           .fc-event-title { font-size: 0.65rem; }
         }
         
-        /* Hide fullcalendar on mobile, show custom view */
         .mobile-calendar { display: none; }
         @media (min-width: 1024px) {
           .mobile-calendar { display: block; }
@@ -419,7 +438,6 @@ const handleSalvar = async (dados) => {
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto">
-            {/* Botão de alternar visualização mobile */}
             <button 
               onClick={() => setMobileListOpen(!mobileListOpen)}
               className="lg:hidden flex-1 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2"
@@ -441,7 +459,6 @@ const handleSalvar = async (dados) => {
           </div>
         </header>
 
-        {/* Controles de visualização mobile */}
         <div className="lg:hidden mb-4">
           <div className="flex gap-2 overflow-x-auto pb-2">
             <button 
@@ -472,10 +489,8 @@ const handleSalvar = async (dados) => {
           </div>
         ) : (
           <>
-            {/* Vista Mobile (Lista) */}
             {window.innerWidth < 1024 && mobileListOpen && <MobileDayView />}
 
-            {/* Vista Calendário (Mobile & Desktop) */}
             <div className={`${window.innerWidth < 1024 && mobileListOpen ? 'hidden' : 'block'}`}>
               <div className="bg-white p-4 md:p-6 rounded-[24px] sm:rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100">
                 <FullCalendar
@@ -488,8 +503,8 @@ const handleSalvar = async (dados) => {
                   }}
                   locale={ptBrLocale}
                   events={eventos}
-                  editable={window.innerWidth >= 768} // Só permite arrastar em desktop
-                  selectable={window.innerWidth >= 768} // Só permite selecionar em desktop
+                  editable={window.innerWidth >= 768}
+                  selectable={window.innerWidth >= 768}
                   selectMirror={true}
                   dayMaxEvents={3}
                   slotMinTime="07:00:00"
@@ -523,7 +538,6 @@ const handleSalvar = async (dados) => {
               </div>
             </div>
 
-            {/* Informações rápidas mobile */}
             {window.innerWidth < 1024 && !mobileListOpen && (
               <div className="mt-4 bg-white p-4 rounded-2xl shadow">
                 <div className="flex items-center justify-between mb-3">
@@ -541,6 +555,9 @@ const handleSalvar = async (dados) => {
                       />
                       <div className="flex-1">
                         <p className="font-medium text-slate-800">{evento.title}</p>
+                        <p className="text-xs text-blue-600">
+                           {evento.extendedProps.medicoNome ? `Dr(a). ${evento.extendedProps.medicoNome}` : ''}
+                        </p>
                         <p className="text-sm text-slate-500">
                           {format(parseISO(evento.start), 'HH:mm')}
                         </p>
@@ -562,13 +579,13 @@ const handleSalvar = async (dados) => {
         )}
       </div>
 
-      {/* Botão flutuante para mobile */}
       <button 
         onClick={() => { 
           setDadosModal({
             data: format(new Date(), 'yyyy-MM-dd'),
             hora: format(new Date(), 'HH:mm'),
             pacienteId: '',
+            medicoId: '',
             status: 'pendente'
           }); 
           setModalOpen(true); 
@@ -582,8 +599,10 @@ const handleSalvar = async (dados) => {
         isOpen={modalOpen} 
         onClose={() => { setModalOpen(false); setDadosModal(null); }} 
         onSave={handleSalvar}
+        onDelete={handleExcluir} 
         dadosIniciais={dadosModal}
         listaPacientes={pacientes}
+        listaMedicos={medicos} 
         isMobile={window.innerWidth < 768}
       />
     </div>

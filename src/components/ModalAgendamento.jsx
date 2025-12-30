@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Trash2, Loader2, Stethoscope } from 'lucide-react';
+import { X, Check, Trash2, Loader2, Stethoscope, MessageCircle } from 'lucide-react';
 
 export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, dadosIniciais, listaPacientes, listaMedicos }) {
   const [formData, setFormData] = useState({
@@ -50,6 +50,11 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
   if (!isOpen) return null;
 
   const medicoSelecionado = listaMedicos?.find(m => m.id === formData.medicoId);
+  const pacienteSel = listaPacientes?.find(p => p.id === formData.pacienteId);
+  const iniciais = pacienteSel ? pacienteSel.nome.substring(0, 2).toUpperCase() : 'PC';
+
+  // Verifica se tem telefone para habilitar ou não o botão
+  const temTelefone = pacienteSel && (pacienteSel.telefone || pacienteSel.celular);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,8 +78,36 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
      setSalvando(false);
   };
 
-  const pacienteSel = listaPacientes?.find(p => p.id === formData.pacienteId);
-  const iniciais = pacienteSel ? pacienteSel.nome.substring(0, 2).toUpperCase() : 'PC';
+  const handleEnviarWhatsapp = () => {
+    if (!pacienteSel) return;
+
+    const telefoneBruto = pacienteSel.telefone || pacienteSel.celular || '';
+    const telefoneLimpo = telefoneBruto.replace(/\D/g, '');
+
+    if (!telefoneLimpo) {
+      alert("Este paciente não possui número de telefone cadastrado.");
+      return;
+    }
+
+    let dataFormatada = formData.data;
+    if (formData.data) {
+        const [ano, mes, dia] = formData.data.split('-');
+        dataFormatada = `${dia}/${mes}/${ano}`;
+    }
+
+    const nomeMedico = medicoSelecionado ? medicoSelecionado.nome : 'o médico';
+    const saudacao = `Olá ${pacienteSel.nome.split(' ')[0]}, tudo bem?`;
+    const corpo = `Gostaríamos de confirmar seu agendamento para *${dataFormatada}* às *${formData.hora}* com *${nomeMedico}*.`;
+    const rodape = `Por favor, responda para confirmar.`;
+
+    const mensagemCompleta = `${saudacao}\n\n${corpo}\n\n${rodape}`;
+    
+    // Adiciona 55 se o número for curto (assumindo BR)
+    const numeroFinal = telefoneLimpo.length <= 11 ? `55${telefoneLimpo}` : telefoneLimpo;
+
+    const url = `https://wa.me/${numeroFinal}?text=${encodeURIComponent(mensagemCompleta)}`;
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
@@ -94,9 +127,7 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
           {/* SELEÇÃO DE MÉDICO */}
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Profissional / Médico</label>
-             {/* MUDANÇA: Border e Focus verde */}
              <div className="flex items-center gap-3 p-2 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-emerald-500 focus-within:bg-white transition-colors">
-                {/* MUDANÇA: Ícone verde */}
                 <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                   <Stethoscope size={20} />
                 </div>
@@ -115,7 +146,6 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
                 </div>
              </div>
              {medicoSelecionado && (
-                // MUDANÇA: Texto verde
                 <p className="text-xs text-emerald-600 mt-1 ml-2 font-medium">Especialidade: {medicoSelecionado.especialidade}</p>
              )}
           </div>
@@ -124,7 +154,6 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Paciente</label>
              <div className="flex items-center gap-3 p-2 border border-slate-200 rounded-xl bg-slate-50">
-                {/* MUDANÇA: Avatar verde teal */}
                 <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">
                   {iniciais}
                 </div>
@@ -140,6 +169,27 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
                   ))}
                 </select>
              </div>
+             
+             {/* BOTÃO WHATSAPP GRANDE E CLARO */}
+             {pacienteSel && (
+               <div className="mt-2">
+                 {temTelefone ? (
+                    <button
+                        type="button"
+                        onClick={handleEnviarWhatsapp}
+                        className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md font-bold text-sm"
+                    >
+                        <MessageCircle size={18} />
+                        Enviar Confirmação no WhatsApp
+                    </button>
+                 ) : (
+                    <div className="w-full py-2 px-3 bg-slate-100 text-slate-400 rounded-xl text-xs flex items-center gap-2 border border-slate-200">
+                        <MessageCircle size={16} />
+                        <span>Paciente sem telefone cadastrado</span>
+                    </div>
+                 )}
+               </div>
+             )}
           </div>
 
           {/* DATA E HORA */}
@@ -189,7 +239,6 @@ export default function ModalAgendamento({ isOpen, onClose, onSave, onDelete, da
                 </button>
              )}
              <button type="button" onClick={onClose} disabled={salvando} className="flex-1 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm">Cancelar</button>
-             {/* MUDANÇA: Botão salvar verde */}
              <button type="submit" disabled={salvando} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50">
                  {salvando ? <Loader2 className="animate-spin" size={18}/> : <Check size={18}/>} Salvar
              </button>

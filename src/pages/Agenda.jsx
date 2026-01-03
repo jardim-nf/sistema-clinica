@@ -1,3 +1,4 @@
+// src/pages/Agenda.jsx - Versão Refatorada
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -10,15 +11,16 @@ import { agendaService } from '../services/agendaService';
 import { pacienteService } from '../services/pacienteService';
 import { medicoService } from '../services/medicoService';
 
-// COMPONENTES IMPORTADOS
+// COMPONENTES
 import ModalAgendamento from '../components/ModalAgendamento';
-import KanbanBoard from '../components/KanbanBoard'; // <--- O NOVO COMPONENTE AQUI
+import MobileDayView from '../components/MobileDayView'; // NOVO
+import KanbanView from '../components/KanbanView'; // NOVO
+import { getCorStatus } from '../utils/agendaUtils'; // NOVO
 
 import { format, parseISO, addHours, isWithinInterval } from 'date-fns';
 import { 
   Loader2, Plus, Calendar as CalendarIcon, 
-  ChevronLeft, ChevronRight, 
-  Clock, Columns
+  Columns
 } from 'lucide-react';
 
 export default function Agenda() {
@@ -52,13 +54,11 @@ export default function Agenda() {
         medicoService.listar(idDaClinica)
       ]);
 
-      // Formatação para o FullCalendar
       const eventosFormatados = listaAgenda.map(evt => ({
         id: evt.id,
         title: evt.pacienteNome || 'Sem Nome',
         start: evt.start,
         end: evt.end,
-        // Guardamos todos os dados originais aqui
         extendedProps: { ...evt }, 
         backgroundColor: getCorStatus(evt.status),
         borderColor: 'transparent',
@@ -92,30 +92,6 @@ export default function Agenda() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- HELPERS VISUAIS ---
-  const getCorStatus = (status) => {
-    switch (status) {
-      case 'confirmado': return '#0d9488'; // Teal
-      case 'em_atendimento': return '#2563eb'; // Blue
-      case 'realizado': return '#64748b'; // Slate
-      case 'faltou': return '#ef4444'; // Red
-      case 'atrasado': return '#f59e0b'; // Amber
-      default: return '#10b981'; // Emerald (Agendado)
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    const config = {
-      agendado: { label: 'Agendado', color: 'bg-emerald-50 text-emerald-700' },
-      confirmado: { label: 'Confirmado', color: 'bg-teal-100 text-teal-800' },
-      em_atendimento: { label: 'Em Atendimento', color: 'bg-blue-100 text-blue-800' },
-      realizado: { label: 'Realizado', color: 'bg-slate-100 text-slate-800' },
-      faltou: { label: 'Faltou', color: 'bg-red-100 text-red-800' },
-      atrasado: { label: 'Atrasado', color: 'bg-amber-100 text-amber-800' }
-    };
-    return config[status] || config.agendado;
-  };
-
   // --- VALIDAÇÕES ---
   const verificarConflito = (start, end, idIgnorar = null) => {
     return eventos.some(evt => {
@@ -130,7 +106,7 @@ export default function Agenda() {
     });
   };
 
-  // --- HANDLERS DO CALENDÁRIO ---
+  // --- HANDLERS ---
   const handleSelectSlot = (info) => {
     setDadosModal({
       data: format(info.start, 'yyyy-MM-dd'),
@@ -165,9 +141,7 @@ export default function Agenda() {
     }
   };
 
-  // --- HANDLERS DO KANBAN (INTEGRAÇÃO COM @DND-KIT) ---
   const handleKanbanStatusChange = async (id, novoStatus) => {
-    // 1. Atualização Otimista (Visual Imediato)
     const eventosAntigos = [...eventos];
     
     setEventos(prev => prev.map(evt => 
@@ -178,31 +152,23 @@ export default function Agenda() {
       } : evt
     ));
 
-    // 2. Chamada API
     try {
       await agendaService.atualizar(id, { status: novoStatus });
-      // Opcional: showToast discreto ou nenhum toast para fluxo rápido
     } catch (error) {
-      // Reverte em caso de erro
       setEventos(eventosAntigos);
       showToast("Erro ao mover card.", "error");
     }
   };
 
-  // --- CRUD GERAL ---
   const handleSalvar = async (dados) => {
     const usuarioId = userData?.id || userData?.uid || userData?.clinicaId;
-    if (!usuarioId) {
-      alert("Erro de sessão. Recarregue a página.");
-      return;
-    }
+    if (!usuarioId) return alert("Erro de sessão.");
 
     const start = new Date(`${dados.data}T${dados.hora}:00`);
     const end = addHours(start, 1);
 
     if (verificarConflito(start, end, dados.id)) {
-      alert("Este horário já está ocupado."); 
-      return;
+      return alert("Este horário já está ocupado."); 
     }
 
     try {
@@ -225,7 +191,6 @@ export default function Agenda() {
       setDadosModal(null);
       carregarDados();
       showToast("Salvo com sucesso!", "success");
-
     } catch (error) {
       console.error(error);
       alert("Erro ao salvar.");
@@ -251,16 +216,13 @@ export default function Agenda() {
     setSelectedDate(novoDia);
   };
 
-  // --- PREPARAÇÃO DE DADOS ---
-  
-  // Filtra eventos para o dia selecionado
+  // --- FILTROS E PREPARAÇÃO ---
   const eventosDoDia = eventos.filter(evento => {
     const dataEvento = format(parseISO(evento.start), 'yyyy-MM-dd');
     const dataSelecionada = format(selectedDate, 'yyyy-MM-dd');
     return dataEvento === dataSelecionada;
   });
 
-  // Transforma os eventos do FullCalendar para o formato simples do KanbanBoard
   const kanbanData = useMemo(() => {
     return eventosDoDia.map(evt => ({
       id: evt.id,
@@ -273,76 +235,19 @@ export default function Agenda() {
     }));
   }, [eventosDoDia]);
 
-
-  // --- COMPONENTE INTERNO: MOBILE LIST ---
-  const MobileDayView = () => (
-    <div className="lg:hidden bg-white rounded-2xl shadow-lg p-4 mt-4">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navegarDia(-1)} className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200"><ChevronLeft size={20} /></button>
-          <div className="text-center">
-            <h3 className="font-bold text-xl text-slate-800">{format(selectedDate, 'dd/MM')}</h3>
-            <p className="text-sm text-slate-500">{format(selectedDate, 'EEEE')}</p>
-          </div>
-          <button onClick={() => navegarDia(1)} className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200"><ChevronRight size={20} /></button>
-        </div>
-        <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold">Hoje</button>
-      </div>
-
-      {eventosDoDia.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-50 rounded-full flex items-center justify-center">
-            <CalendarIcon className="text-emerald-400" size={24} />
-          </div>
-          <p className="text-slate-500 font-medium">Nenhum agendamento para hoje</p>
-        </div>
-      ) : (
-        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-          {eventosDoDia
-            .sort((a, b) => parseISO(a.start) - parseISO(b.start))
-            .map(evento => {
-              const status = getStatusBadge(evento.extendedProps.status);
-              const horaInicio = format(parseISO(evento.start), 'HH:mm');
-              
-              return (
-                <div 
-                  key={evento.id}
-                  onClick={() => {
-                    setDadosModal({
-                      ...evento.extendedProps,
-                      id: evento.id,
-                      data: format(parseISO(evento.start), 'yyyy-MM-dd'),
-                      hora: format(parseISO(evento.start), 'HH:mm')
-                    });
-                    setModalOpen(true);
-                  }}
-                  className="p-4 rounded-xl border-l-4 border-l-emerald-500 bg-slate-50 hover:bg-white hover:shadow-md transition-all cursor-pointer"
-                  style={{ borderLeftColor: getCorStatus(evento.extendedProps.status) }}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-slate-400" />
-                      <span className="font-bold text-slate-800">{horaInicio}</span>
-                    </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${status.color}`}>
-                      {status.label}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-lg text-slate-900 mb-1">{evento.title}</h4>
-                  {evento.extendedProps.medicoNome && (
-                    <p className="text-xs text-emerald-600 font-medium">Dr(a). {evento.extendedProps.medicoNome}</p>
-                  )}
-                </div>
-              );
-            })}
-        </div>
-      )}
-    </div>
-  );
+  const abrirModalEvento = (evento) => {
+      setDadosModal({
+        ...evento.extendedProps,
+        id: evento.id,
+        data: format(parseISO(evento.start), 'yyyy-MM-dd'),
+        hora: format(parseISO(evento.start), 'HH:mm')
+      });
+      setModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-2 md:p-8">
-      {/* Estilos Globais do FullCalendar */}
+      {/* Estilos Globais do FullCalendar - Idealmente mover para App.css */}
       <style>{`
         .fc .fc-toolbar-title { font-size: 1rem !important; font-weight: 700; color: #1e293b; text-transform: capitalize; }
         @media (min-width: 768px) { .fc .fc-toolbar-title { font-size: 1.25rem !important; } }
@@ -354,8 +259,6 @@ export default function Agenda() {
       `}</style>
 
       <div className="max-w-7xl mx-auto">
-        
-        {/* HEADER DA PÁGINA */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center gap-4">
              <div>
@@ -365,7 +268,6 @@ export default function Agenda() {
                 </h1>
              </div>
              
-             {/* TOGGLE DE VISUALIZAÇÃO */}
              <div className="hidden md:flex bg-slate-200 p-1 rounded-xl">
                 <button 
                   onClick={() => setViewMode('calendar')}
@@ -416,12 +318,19 @@ export default function Agenda() {
           </div>
         ) : (
           <>
-            {/* LISTA MOBILE */}
-            {window.innerWidth < 1024 && mobileListOpen && <MobileDayView />}
+            {/* LISTA MOBILE (Componente Novo) */}
+            {window.innerWidth < 1024 && mobileListOpen && (
+              <MobileDayView 
+                selectedDate={selectedDate}
+                setSelectedDate={setSelectedDate}
+                navegarDia={navegarDia}
+                eventosDoDia={eventosDoDia}
+                onEventClick={abrirModalEvento}
+              />
+            )}
 
             <div className={`${window.innerWidth < 1024 && mobileListOpen ? 'hidden' : 'block'}`}>
               
-              {/* === VISÃO CALENDÁRIO === */}
               {viewMode === 'calendar' && (
                 <div className="bg-white p-4 md:p-6 rounded-[24px] sm:rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-100 animate-in fade-in duration-300">
                   <FullCalendar
@@ -441,40 +350,22 @@ export default function Agenda() {
                     select={handleSelectSlot}
                     eventClick={(info) => {
                       const evt = info.event.extendedProps;
-                      setDadosModal({
-                        ...evt,
-                        id: info.event.id,
-                        data: format(parseISO(info.event.startStr), 'yyyy-MM-dd'),
-                        hora: format(parseISO(info.event.startStr), 'HH:mm')
-                      });
-                      setModalOpen(true);
+                      // Adaptação para usar o mesmo formato do abrirModalEvento
+                      abrirModalEvento({ id: info.event.id, start: info.event.startStr, extendedProps: evt });
                     }}
                     eventDrop={window.innerWidth >= 768 ? handleEventDrop : undefined}
                   />
                 </div>
               )}
 
-              {/* === VISÃO KANBAN (DND-KIT INTEGRADO) === */}
+              {/* VISÃO KANBAN (Componente Novo) */}
               {viewMode === 'kanban' && (
-                <div className="h-[calc(100vh-200px)] min-h-[500px] animate-in fade-in zoom-in duration-300 flex flex-col">
-                  {/* Seletor de Data para o Kanban */}
-                  <div className="flex items-center justify-center mb-6 bg-white p-2 rounded-xl shadow-sm border border-slate-100 max-w-md mx-auto">
-                    <button onClick={() => navegarDia(-1)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronLeft/></button>
-                    <div className="px-6 text-center">
-                        <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Visualizando Dia</span>
-                        <span className="text-lg font-bold text-slate-800">{format(selectedDate, 'dd/MM/yyyy')}</span>
-                    </div>
-                    <button onClick={() => navegarDia(1)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500"><ChevronRight/></button>
-                  </div>
-
-                  {/* O COMPONENTE NOVO ENTRA AQUI */}
-                  <div className="flex-1 overflow-hidden">
-                    <KanbanBoard 
-                      agendamentos={kanbanData} 
-                      onStatusChange={handleKanbanStatusChange} 
-                    />
-                  </div>
-                </div>
+                <KanbanView 
+                  selectedDate={selectedDate}
+                  navegarDia={navegarDia}
+                  kanbanData={kanbanData}
+                  onStatusChange={handleKanbanStatusChange}
+                />
               )}
 
             </div>
@@ -482,7 +373,6 @@ export default function Agenda() {
         )}
       </div>
 
-      {/* Botão Flutuante Mobile */}
       <button 
         onClick={() => { 
           setDadosModal({ data: format(new Date(), 'yyyy-MM-dd'), hora: format(new Date(), 'HH:mm'), pacienteId: '', medicoId: '', status: 'agendado' }); 

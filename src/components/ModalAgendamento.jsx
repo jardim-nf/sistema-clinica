@@ -1,3 +1,4 @@
+// src/components/ModalAgendamento.jsx
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -330,6 +331,8 @@ export default function ModalAgendamento({
                    <option value="agendado">Agendado</option>
                    <option value="confirmado">Confirmado</option>
                    <option value="realizado">Realizado</option>
+                   {/* NOVA OPÇÃO ADICIONADA: */}
+                   <option value="cancelado">Cancelado</option>
                 </select>
              </div>
              <div>

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { medicoService } from '../services/medicoService';
 import { useToast } from '../contexts/ToastContext';
 import { 
-  Plus, Search, Edit2, Trash2, Loader2, Stethoscope, Save, X, Phone 
+  Plus, Search, Edit2, Trash2, Loader2, Stethoscope, Save, X, Phone, CalendarCheck 
 } from 'lucide-react';
 
 const mascaraTelefone = (valor) => {
@@ -15,6 +15,17 @@ const mascaraTelefone = (valor) => {
   return v;
 };
 
+// Mapeamento de dias para exibição e lógica (0 = Dom, 1 = Seg, etc...)
+const DIAS_SEMANA = [
+  { id: 1, nome: 'Seg', label: 'Segunda' },
+  { id: 2, nome: 'Ter', label: 'Terça' },
+  { id: 3, nome: 'Qua', label: 'Quarta' },
+  { id: 4, nome: 'Qui', label: 'Quinta' },
+  { id: 5, nome: 'Sex', label: 'Sexta' },
+  { id: 6, nome: 'Sáb', label: 'Sábado' },
+  { id: 0, nome: 'Dom', label: 'Domingo' }
+];
+
 export default function Medicos() {
   const { userData } = useAuth();
   const { showToast } = useToast();
@@ -23,7 +34,17 @@ export default function Medicos() {
   const [modalOpen, setModalOpen] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState('');
-  const [formData, setFormData] = useState({ id: null, nome: '', especialidade: '', crm: '', telefone: '' });
+  
+  // Estado inicial inclui diasAtendimento como array vazio
+  const [formData, setFormData] = useState({ 
+    id: null, 
+    nome: '', 
+    especialidade: '', 
+    crm: '', 
+    telefone: '',
+    diasAtendimento: [] // Novo campo
+  });
+  
   const clinicaId = userData?.clinicaId || userData?.uid;
 
   useEffect(() => { if (clinicaId) carregarMedicos(); }, [clinicaId]);
@@ -41,14 +62,40 @@ export default function Medicos() {
   }
 
   function abrirModal(medico = null) {
-    if (medico) setFormData(medico);
-    else setFormData({ id: null, nome: '', especialidade: '', crm: '', telefone: '' });
+    if (medico) {
+        // Garante que diasAtendimento seja um array, mesmo se vier null do banco
+        setFormData({
+            ...medico,
+            diasAtendimento: Array.isArray(medico.diasAtendimento) ? medico.diasAtendimento : [] 
+        });
+    } else {
+        setFormData({ 
+            id: null, 
+            nome: '', 
+            especialidade: '', 
+            crm: '', 
+            telefone: '',
+            diasAtendimento: [1, 2, 3, 4, 5] // Padrão: Seg a Sex
+        });
+    }
     setModalOpen(true);
   }
 
   const handleChangeTelefone = (e) => {
     const valorFormatado = mascaraTelefone(e.target.value);
     setFormData(prev => ({ ...prev, telefone: valorFormatado }));
+  };
+
+  // Função para alternar o dia selecionado
+  const toggleDia = (diaId) => {
+    setFormData(prev => {
+        const dias = prev.diasAtendimento || [];
+        if (dias.includes(diaId)) {
+            return { ...prev, diasAtendimento: dias.filter(d => d !== diaId) };
+        } else {
+            return { ...prev, diasAtendimento: [...dias, diaId].sort() };
+        }
+    });
   };
 
   async function handleSubmit(e) {
@@ -93,7 +140,7 @@ export default function Medicos() {
     <div className="p-4 md:p-8 min-h-screen bg-slate-50">
       <div className="max-w-6xl mx-auto">
         
-        {/* Header Verde */}
+        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
@@ -102,13 +149,14 @@ export default function Medicos() {
               </div>
               Corpo Clínico
             </h1>
-            <p className="text-slate-500 mt-1 ml-12">Gerencie os médicos e especialistas da clínica.</p>
+            <p className="text-slate-500 mt-1 ml-12">Gerencie os médicos e seus dias de atendimento.</p>
           </div>
           <button onClick={() => abrirModal()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 transition-all">
             <Plus size={20} /> Novo Médico
           </button>
         </div>
 
+        {/* Barra de Busca */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex items-center gap-3">
           <Search className="text-slate-400" />
           <input 
@@ -125,9 +173,8 @@ export default function Medicos() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {medicosFiltrados.map(medico => (
-              <div key={medico.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group relative overflow-hidden">
+              <div key={medico.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group relative overflow-hidden flex flex-col">
                 <div className="flex justify-between items-start mb-4">
-                  {/* MUDANÇA: Avatar com fundo verde claro e texto verde */}
                   <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 font-bold text-lg border border-emerald-100">
                     {medico.nome.substring(0,2).toUpperCase()}
                   </div>
@@ -138,12 +185,24 @@ export default function Medicos() {
                 </div>
                 
                 <h3 className="font-bold text-lg text-slate-800 mb-0.5">{medico.nome}</h3>
-                {/* MUDANÇA: Texto de especialidade verde */}
                 <p className="text-emerald-600 font-bold text-sm mb-3 flex items-center gap-1">
                    <Stethoscope size={14} className="text-emerald-400"/> {medico.especialidade}
                 </p>
 
-                <div className="pt-3 border-t border-slate-50 space-y-2">
+                {/* Exibição dos Dias de Atendimento no Card */}
+                <div className="mb-4 flex flex-wrap gap-1">
+                    {medico.diasAtendimento && medico.diasAtendimento.length > 0 ? (
+                        medico.diasAtendimento.sort().map(dia => (
+                            <span key={dia} className="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase rounded-md border border-slate-200">
+                                {DIAS_SEMANA.find(d => d.id === dia)?.nome}
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-xs text-slate-400 italic">Nenhum dia configurado</span>
+                    )}
+                </div>
+
+                <div className="mt-auto pt-3 border-t border-slate-50 space-y-2">
                     {medico.crm && (
                         <p className="text-slate-500 text-xs font-medium bg-slate-100 inline-block px-2 py-1 rounded">
                             CRM: {medico.crm}
@@ -166,10 +225,10 @@ export default function Medicos() {
           </div>
         )}
 
-        {/* Modal */}
+        {/* Modal Cadastro/Edição */}
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                 <h2 className="text-xl font-bold text-slate-800">{formData.id ? 'Editar Médico' : 'Novo Médico'}</h2>
                 <button onClick={() => setModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition"><X size={20}/></button>
@@ -178,7 +237,6 @@ export default function Medicos() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Nome Completo</label>
-                  {/* MUDANÇA: Focus border verde */}
                   <input required type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white font-medium" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} placeholder="Ex: Dr. João Silva" />
                 </div>
                 <div>
@@ -188,9 +246,37 @@ export default function Medicos() {
                     <input required type="text" className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.especialidade} onChange={e => setFormData({...formData, especialidade: e.target.value})} placeholder="Ex: Cardiologista" />
                   </div>
                 </div>
+
+                {/* SELEÇÃO DE DIAS DE ATENDIMENTO */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <CalendarCheck size={16}/> Dias de Atendimento
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                        {DIAS_SEMANA.map(dia => {
+                            const selecionado = formData.diasAtendimento?.includes(dia.id);
+                            return (
+                                <button
+                                    key={dia.id}
+                                    type="button"
+                                    onClick={() => toggleDia(dia.id)}
+                                    className={`px-3 py-2 rounded-lg text-sm font-bold transition-all border ${
+                                        selecionado 
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' 
+                                        : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
+                                    }`}
+                                >
+                                    {dia.nome}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-2 ml-1">Selecione os dias da semana que este médico atende na clínica.</p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">CRM / Registro</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">CRM</label>
                         <input type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.crm} onChange={e => setFormData({...formData, crm: e.target.value})} placeholder="12345/SP" />
                     </div>
                     <div>
@@ -202,7 +288,6 @@ export default function Medicos() {
                     </div>
                 </div>
                 <div className="pt-2">
-                    {/* MUDANÇA: Botão de salvar verde */}
                     <button disabled={salvando} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-all flex justify-center items-center gap-2 mt-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100">
                         {salvando ? <Loader2 className="animate-spin" size={20}/> : <Save size={20}/>} 
                         {formData.id ? 'Salvar Alterações' : 'Cadastrar Médico'}

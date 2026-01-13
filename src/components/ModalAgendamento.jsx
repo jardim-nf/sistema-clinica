@@ -1,9 +1,9 @@
 // src/components/ModalAgendamento.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Check, Trash2, Loader2, Stethoscope, MessageCircle, FileText } from 'lucide-react';
+import { X, Check, Trash2, Loader2, Stethoscope, MessageCircle, FileText, AlertCircle } from 'lucide-react';
 
 // --- 1. CONFIGURAÇÃO DOS TEMPLATES (Fora do componente) ---
 const TEMPLATES_PADRAO = [
@@ -118,6 +118,24 @@ export default function ModalAgendamento({
   const horaObservada = watch('hora');
   const idAgendamento = watch('id');
 
+  // --- LÓGICA DE FILTRAGEM DE MÉDICOS (NOVO) ---
+  const medicosDisponiveis = useMemo(() => {
+    // Se não tem data selecionada, mostra todos (ou poderia não mostrar nenhum, depende da preferência)
+    if (!dataObservada) return listaMedicos;
+    
+    // Obtém o dia da semana (0 = Dom, 1 = Seg, ..., 6 = Sáb)
+    // Usamos 'T12:00:00' para evitar problemas de fuso horário voltando o dia
+    const diaSemana = new Date(dataObservada + 'T12:00:00').getDay();
+    
+    return listaMedicos?.filter(medico => {
+        // Se o médico não tiver a configuração nova (array vazio ou null), ele aparece sempre (retrocompatibilidade)
+        if (!medico.diasAtendimento || medico.diasAtendimento.length === 0) return true;
+        
+        // Se tiver configuração, verifica se atende neste dia
+        return medico.diasAtendimento.includes(diaSemana);
+    }) || [];
+  }, [dataObservada, listaMedicos]);
+
   // --- Lógica Derivada ---
   const medicoSelecionado = listaMedicos?.find(m => m.id == medicoIdObservado);
   const pacienteSel = listaPacientes?.find(p => p.id == pacienteIdObservado);
@@ -194,7 +212,29 @@ export default function ModalAgendamento({
         {/* FORMULÁRIO COM SCROLL */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6 space-y-4">
           
-          {/* SELEÇÃO DE MÉDICO */}
+          {/* 1. DATA E HORA (MOVIDO PARA O TOPO) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Data</label>
+              <input 
+                type="date" 
+                {...register('data')}
+                className={`w-full px-4 py-2 border rounded-xl text-slate-700 text-sm font-medium ${errors.data ? 'border-red-500' : 'border-slate-200'}`} 
+              />
+              {errors.data && <p className="text-xs text-red-500 mt-1">{errors.data.message}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Horário</label>
+              <input 
+                type="time" 
+                {...register('hora')}
+                className={`w-full px-4 py-2 border rounded-xl text-slate-700 text-sm font-medium ${errors.hora ? 'border-red-500' : 'border-slate-200'}`} 
+              />
+               {errors.hora && <p className="text-xs text-red-500 mt-1">{errors.hora.message}</p>}
+            </div>
+          </div>
+
+          {/* 2. SELEÇÃO DE MÉDICO (FILTRADO) */}
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Profissional / Médico</label>
              <div className={`flex items-center gap-3 p-2 border rounded-xl bg-slate-50 focus-within:border-emerald-500 focus-within:bg-white transition-colors ${errors.medicoId ? 'border-red-500' : 'border-slate-200'}`}>
@@ -207,19 +247,28 @@ export default function ModalAgendamento({
                       className="w-full bg-transparent border-none outline-none text-slate-700 font-bold text-sm h-full py-1"
                     >
                       <option value="">Selecione o médico...</option>
-                      {listaMedicos?.map(m => (
+                      {/* ALTERAÇÃO: Usa medicosDisponiveis em vez de listaMedicos */}
+                      {medicosDisponiveis?.map(m => (
                         <option key={m.id} value={m.id}>{m.nome} - {m.especialidade}</option>
                       ))}
                     </select>
                 </div>
              </div>
+             
+             {/* ALERTA SE A LISTA ESTIVER VAZIA PARA O DIA */}
+             {dataObservada && medicosDisponiveis?.length === 0 && (
+                 <p className="text-xs text-orange-500 mt-1.5 ml-2 flex items-center gap-1 font-medium bg-orange-50 p-1.5 rounded-lg border border-orange-100">
+                    <AlertCircle size={14}/> Nenhum médico atende neste dia da semana.
+                 </p>
+             )}
+
              {errors.medicoId && <p className="text-xs text-red-500 mt-1 ml-2">{errors.medicoId.message}</p>}
              {medicoSelecionado && !errors.medicoId && (
                 <p className="text-xs text-emerald-600 mt-1 ml-2 font-medium">Especialidade: {medicoSelecionado.especialidade}</p>
              )}
           </div>
 
-          {/* SELEÇÃO DE PACIENTE */}
+          {/* 3. SELEÇÃO DE PACIENTE */}
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Paciente</label>
              <div className={`flex items-center gap-3 p-2 border rounded-xl bg-slate-50 ${errors.pacienteId ? 'border-red-500' : 'border-slate-200'}`}>
@@ -294,28 +343,6 @@ export default function ModalAgendamento({
              )}
           </div>
 
-          {/* DATA E HORA */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Data</label>
-              <input 
-                type="date" 
-                {...register('data')}
-                className={`w-full px-4 py-2 border rounded-xl text-slate-700 text-sm font-medium ${errors.data ? 'border-red-500' : 'border-slate-200'}`} 
-              />
-              {errors.data && <p className="text-xs text-red-500 mt-1">{errors.data.message}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Horário</label>
-              <input 
-                type="time" 
-                {...register('hora')}
-                className={`w-full px-4 py-2 border rounded-xl text-slate-700 text-sm font-medium ${errors.hora ? 'border-red-500' : 'border-slate-200'}`} 
-              />
-               {errors.hora && <p className="text-xs text-red-500 mt-1">{errors.hora.message}</p>}
-            </div>
-          </div>
-
           <div className="grid grid-cols-3 gap-3">
              <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tipo</label>
@@ -331,7 +358,6 @@ export default function ModalAgendamento({
                    <option value="agendado">Agendado</option>
                    <option value="confirmado">Confirmado</option>
                    <option value="realizado">Realizado</option>
-                   {/* NOVA OPÇÃO ADICIONADA: */}
                    <option value="cancelado">Cancelado</option>
                 </select>
              </div>

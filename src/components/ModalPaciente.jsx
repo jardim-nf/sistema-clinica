@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, Phone, Mail, Hash, Calendar, ShieldCheck } from 'lucide-react';
+import { X, Save, User, Phone, Mail, Hash, Calendar, ShieldCheck, MapPin } from 'lucide-react';
 
 export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
   const initialFormState = {
@@ -10,7 +10,14 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
     dataNascimento: '',
     genero: 'nao_informado',
     status: 'ativo',
-    observacoes: ''
+    observacoes: '',
+    // --- NOVOS CAMPOS DE ENDEREÇO ---
+    endereco: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    estado: ''
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -76,13 +83,9 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
     
     const newErrors = {};
 
-    if (!formData.nome.trim()) {
-      newErrors.nome = "Nome é obrigatório";
-    }
-
-    if (!formData.telefone.trim()) {
-      newErrors.telefone = "Telefone é obrigatório";
-    }
+    // Validações originais
+    if (!formData.nome.trim()) newErrors.nome = "Nome é obrigatório";
+    if (!formData.telefone.trim()) newErrors.telefone = "Telefone é obrigatório";
     
     const cpfLimpo = formData.cpf.replace(/\D/g, '');
     if (!cpfLimpo) {
@@ -90,6 +93,13 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
     } else if (cpfLimpo.length !== 11) {
       newErrors.cpf = "CPF incompleto (digite 11 números)";
     }
+
+    // --- NOVAS VALIDAÇÕES DE ENDEREÇO (Obrigatórios, exceto complemento) ---
+    if (!formData.endereco.trim()) newErrors.endereco = "Endereço é obrigatório";
+    if (!formData.numero.trim()) newErrors.numero = "Nº é obrigatório";
+    if (!formData.bairro.trim()) newErrors.bairro = "Bairro é obrigatório";
+    if (!formData.cidade.trim()) newErrors.cidade = "Cidade é obrigatória";
+    if (!formData.estado.trim()) newErrors.estado = "Estado é obrigatório";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -141,7 +151,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="nome"
                   value={formData.nome}
                   onChange={handleChange}
-                  // MUDANÇA: Focus ring verde
                   className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.nome ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="Ex: João da Silva"
                 />
@@ -160,7 +169,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   value={formData.cpf}
                   onChange={handleChange}
                   maxLength={14}
-                  // MUDANÇA: Focus ring verde
                   className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="000.000.000-00"
                 />
@@ -179,12 +187,103 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   value={formData.telefone}
                   onChange={handleChange}
                   maxLength={15}
-                  // MUDANÇA: Focus ring verde
                   className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.telefone ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="(00) 00000-0000"
                 />
               </div>
               {errors.telefone && <p className="text-xs text-red-500 font-medium">{errors.telefone}</p>}
+            </div>
+
+            {/* --- SEÇÃO DE ENDEREÇO --- */}
+            <div className="md:col-span-2 mt-2 pt-4 border-t border-slate-100">
+                <h3 className="text-sm font-bold text-emerald-600 flex items-center gap-2 mb-4">
+                    <MapPin size={18} /> Endereço Residencial
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* Endereço (Logradouro) */}
+                    <div className="md:col-span-3 space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Logradouro *</label>
+                        <input
+                            type="text"
+                            name="endereco"
+                            value={formData.endereco}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.endereco ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                            placeholder="Rua, Avenida, etc."
+                        />
+                        {errors.endereco && <p className="text-xs text-red-500 font-medium">{errors.endereco}</p>}
+                    </div>
+
+                    {/* Número */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Nº *</label>
+                        <input
+                            type="text"
+                            name="numero"
+                            value={formData.numero}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.numero ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                        />
+                        {errors.numero && <p className="text-xs text-red-500 font-medium">{errors.numero}</p>}
+                    </div>
+
+                    {/* Bairro */}
+                    <div className="md:col-span-2 space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Bairro *</label>
+                        <input
+                            type="text"
+                            name="bairro"
+                            value={formData.bairro}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.bairro ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                        />
+                        {errors.bairro && <p className="text-xs text-red-500 font-medium">{errors.bairro}</p>}
+                    </div>
+
+                    {/* Complemento */}
+                    <div className="md:col-span-2 space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Complemento</label>
+                        <input
+                            type="text"
+                            name="complemento"
+                            value={formData.complemento}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
+                            placeholder="Apto, Bloco, etc."
+                        />
+                    </div>
+
+                    {/* Cidade */}
+                    <div className="md:col-span-3 space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Cidade *</label>
+                        <input
+                            type="text"
+                            name="cidade"
+                            value={formData.cidade}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.cidade ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                        />
+                        {errors.cidade && <p className="text-xs text-red-500 font-medium">{errors.cidade}</p>}
+                    </div>
+
+                    {/* Estado */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Estado *</label>
+                        <select
+                            name="estado"
+                            value={formData.estado}
+                            onChange={handleChange}
+                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.estado ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all appearance-none text-slate-600`}
+                        >
+                            <option value="">UF</option>
+                            <option value="RJ">RJ</option>
+                            <option value="SP">SP</option>
+                            <option value="MG">MG</option>
+                            <option value="ES">ES</option>
+                        </select>
+                        {errors.estado && <p className="text-xs text-red-500 font-medium">{errors.estado}</p>}
+                    </div>
+                </div>
             </div>
 
             {/* Email */}
@@ -197,7 +296,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  // MUDANÇA: Focus ring verde
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
                   placeholder="exemplo@email.com"
                 />
@@ -214,7 +312,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="dataNascimento"
                   value={formData.dataNascimento}
                   onChange={handleChange}
-                  // MUDANÇA: Focus ring verde
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all text-slate-600"
                 />
               </div>
@@ -229,7 +326,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  // MUDANÇA: Focus ring verde
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all appearance-none text-slate-600"
                 >
                   <option value="ativo">Ativo</option>
@@ -246,7 +342,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                 value={formData.observacoes}
                 onChange={handleChange}
                 rows="3"
-                // MUDANÇA: Focus ring verde
                 className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all resize-none"
                 placeholder="Histórico médico breve ou observações importantes..."
               />
@@ -267,7 +362,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
           <button
             type="submit"
             form="pacienteForm"
-            // MUDANÇA: Botão salvar verde
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2"
           >
             <Save size={18} />

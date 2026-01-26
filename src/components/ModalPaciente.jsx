@@ -11,7 +11,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
     genero: 'nao_informado',
     status: 'ativo',
     observacoes: '',
-    // --- NOVOS CAMPOS DE ENDEREÇO ---
+    // --- CAMPOS DE ENDEREÇO ---
     endereco: '',
     numero: '',
     complemento: '',
@@ -68,6 +68,9 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
     const { name, value } = e.target;
     let novoValor = value;
 
+    // Se estiver editando e o campo for CPF, não permitir alteração
+    if (name === 'cpf' && paciente) return;
+
     if (name === 'cpf') novoValor = mascaraCPF(value);
     if (name === 'telefone') novoValor = mascaraTelefone(value);
 
@@ -94,7 +97,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
       newErrors.cpf = "CPF incompleto (digite 11 números)";
     }
 
-    // --- NOVAS VALIDAÇÕES DE ENDEREÇO (Obrigatórios, exceto complemento) ---
+    // --- VALIDAÇÕES DE ENDEREÇO (Obrigatórios, exceto complemento) ---
     if (!formData.endereco.trim()) newErrors.endereco = "Endereço é obrigatório";
     if (!formData.numero.trim()) newErrors.numero = "Nº é obrigatório";
     if (!formData.bairro.trim()) newErrors.bairro = "Bairro é obrigatório";
@@ -158,9 +161,11 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
               {errors.nome && <p className="text-xs text-red-500 font-medium">{errors.nome}</p>}
             </div>
 
-            {/* CPF */}
+            {/* CPF - BLOQUEADO NA EDIÇÃO */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">CPF *</label>
+              <label className="text-sm font-medium text-slate-700">
+                CPF * {paciente && <span className="text-[10px] text-slate-400 font-normal ml-1">(Bloqueado para alteração)</span>}
+              </label>
               <div className="relative">
                 <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
                 <input
@@ -169,7 +174,12 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   value={formData.cpf}
                   onChange={handleChange}
                   maxLength={14}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  disabled={!!paciente}
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-4 transition-all ${
+                    paciente 
+                      ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200' 
+                      : `bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'}`
+                  }`}
                   placeholder="000.000.000-00"
                 />
               </div>

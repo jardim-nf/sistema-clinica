@@ -86,7 +86,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
     
     const newErrors = {};
 
-    // Validações originais
+    // Validações originais (Nome, Telefone e CPF continuam obrigatórios)
     if (!formData.nome.trim()) newErrors.nome = "Nome é obrigatório";
     if (!formData.telefone.trim()) newErrors.telefone = "Telefone é obrigatório";
     
@@ -97,12 +97,8 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
       newErrors.cpf = "CPF incompleto (digite 11 números)";
     }
 
-    // --- VALIDAÇÕES DE ENDEREÇO (Obrigatórios, exceto complemento) ---
-    if (!formData.endereco.trim()) newErrors.endereco = "Endereço é obrigatório";
-    if (!formData.numero.trim()) newErrors.numero = "Nº é obrigatório";
-    if (!formData.bairro.trim()) newErrors.bairro = "Bairro é obrigatório";
-    if (!formData.cidade.trim()) newErrors.cidade = "Cidade é obrigatória";
-    if (!formData.estado.trim()) newErrors.estado = "Estado é obrigatório";
+    // --- VALIDAÇÕES DE ENDEREÇO REMOVIDAS ---
+    // O bloco que checava endereco, numero, bairro, cidade e estado foi retirado.
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -204,50 +200,47 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
               {errors.telefone && <p className="text-xs text-red-500 font-medium">{errors.telefone}</p>}
             </div>
 
-            {/* --- SEÇÃO DE ENDEREÇO --- */}
+            {/* --- SEÇÃO DE ENDEREÇO (AGORA OPCIONAL) --- */}
             <div className="md:col-span-2 mt-2 pt-4 border-t border-slate-100">
                 <h3 className="text-sm font-bold text-emerald-600 flex items-center gap-2 mb-4">
-                    <MapPin size={18} /> Endereço Residencial
+                    <MapPin size={18} /> Endereço Residencial <span className="text-xs font-normal text-slate-400">(Opcional)</span>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Endereço (Logradouro) */}
                     <div className="md:col-span-3 space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Logradouro *</label>
+                        <label className="text-sm font-medium text-slate-700">Logradouro</label>
                         <input
                             type="text"
                             name="endereco"
                             value={formData.endereco}
                             onChange={handleChange}
-                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.endereco ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
                             placeholder="Rua, Avenida, etc."
                         />
-                        {errors.endereco && <p className="text-xs text-red-500 font-medium">{errors.endereco}</p>}
                     </div>
 
                     {/* Número */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Nº *</label>
+                        <label className="text-sm font-medium text-slate-700">Nº</label>
                         <input
                             type="text"
                             name="numero"
                             value={formData.numero}
                             onChange={handleChange}
-                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.numero ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
                         />
-                        {errors.numero && <p className="text-xs text-red-500 font-medium">{errors.numero}</p>}
                     </div>
 
                     {/* Bairro */}
                     <div className="md:col-span-2 space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Bairro *</label>
+                        <label className="text-sm font-medium text-slate-700">Bairro</label>
                         <input
                             type="text"
                             name="bairro"
                             value={formData.bairro}
                             onChange={handleChange}
-                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.bairro ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
                         />
-                        {errors.bairro && <p className="text-xs text-red-500 font-medium">{errors.bairro}</p>}
                     </div>
 
                     {/* Complemento */}
@@ -265,25 +258,24 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
 
                     {/* Cidade */}
                     <div className="md:col-span-3 space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Cidade *</label>
+                        <label className="text-sm font-medium text-slate-700">Cidade</label>
                         <input
                             type="text"
                             name="cidade"
                             value={formData.cidade}
                             onChange={handleChange}
-                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.cidade ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
                         />
-                        {errors.cidade && <p className="text-xs text-red-500 font-medium">{errors.cidade}</p>}
                     </div>
 
                     {/* Estado */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Estado *</label>
+                        <label className="text-sm font-medium text-slate-700">Estado</label>
                         <select
                             name="estado"
                             value={formData.estado}
                             onChange={handleChange}
-                            className={`w-full px-4 py-3 bg-slate-50 border ${errors.estado ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all appearance-none text-slate-600`}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all appearance-none text-slate-600"
                         >
                             <option value="">UF</option>
                             <option value="RJ">RJ</option>
@@ -291,7 +283,6 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                             <option value="MG">MG</option>
                             <option value="ES">ES</option>
                         </select>
-                        {errors.estado && <p className="text-xs text-red-500 font-medium">{errors.estado}</p>}
                     </div>
                 </div>
             </div>

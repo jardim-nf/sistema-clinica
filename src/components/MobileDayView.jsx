@@ -26,15 +26,15 @@ const MobileDayView = ({
             <ChevronRight size={20} />
           </button>
         </div>
-        <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold">
+        <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">
           Hoje
         </button>
       </div>
 
       {eventosDoDia.length === 0 ? (
         <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-50 rounded-full flex items-center justify-center">
-            <CalendarIcon className="text-emerald-400" size={24} />
+          <div className="w-16 h-16 mx-auto mb-4 bg-blue-50 rounded-full flex items-center justify-center">
+            <CalendarIcon className="text-blue-400" size={24} />
           </div>
           <p className="text-slate-500 font-medium">Nenhum agendamento para hoje</p>
         </div>
@@ -50,7 +50,7 @@ const MobileDayView = ({
                 <div 
                   key={evento.id}
                   onClick={() => onEventClick(evento)}
-                  className="p-4 rounded-xl border-l-4 border-l-emerald-500 bg-slate-50 hover:bg-white hover:shadow-md transition-all cursor-pointer"
+                  className="p-4 rounded-xl border-l-4 border-l-blue-500 bg-slate-50 hover:bg-white hover:shadow-md transition-all cursor-pointer"
                   style={{ borderLeftColor: getCorStatus(evento.extendedProps.status) }}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -64,7 +64,7 @@ const MobileDayView = ({
                   </div>
                   <h4 className="font-bold text-lg text-slate-900 mb-1">{evento.title}</h4>
                   {evento.extendedProps.medicoNome && (
-                    <p className="text-xs text-emerald-600 font-medium">Dr(a). {evento.extendedProps.medicoNome}</p>
+                    <p className="text-xs text-blue-600 font-medium">Dr(a). {evento.extendedProps.medicoNome}</p>
                   )}
                 </div>
               );

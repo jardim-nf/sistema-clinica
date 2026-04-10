@@ -8,7 +8,7 @@ const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Conf
     
     const Icon = isWarning ? AlertTriangle : CheckCircle;
     const colorClass = isWarning ? 'text-orange-500' : 'text-green-500';
-    const buttonClass = isWarning ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700';
+    const buttonClass = isWarning ? 'bg-orange-600 hover:bg-orange-700' : 'bg-indigo-600 hover:bg-indigo-700';
 
     return (
         <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4">

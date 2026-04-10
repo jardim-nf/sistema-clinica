@@ -10,7 +10,7 @@ const TemplateManager = ({ templates = [], onSelectTemplate, currentType }) => {
       case 'receita': return { icon: <Pill size={18} />, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Receitas' };
       case 'atestado': return { icon: <FileBadge size={18} />, color: 'text-amber-500', bg: 'bg-amber-50', label: 'Atestados' };
       case 'declaracao': return { icon: <FileCheck size={18} />, color: 'text-purple-500', bg: 'bg-purple-50', label: 'Declarações' };
-      default: return { icon: <ClipboardList size={18} />, color: 'text-emerald-500', bg: 'bg-emerald-50', label: 'Evoluções' };
+      default: return { icon: <ClipboardList size={18} />, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Evoluções' };
     }
   };
 

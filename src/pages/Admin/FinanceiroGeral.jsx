@@ -122,7 +122,7 @@ const ModalEdicaoValor = ({ clinica, onClose, fetchSummaryAndList, showToast }) 
                         </button>
                         <button 
                             type="submit" 
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                             disabled={isSaving || isInvalid}
                         >
                             {isSaving ? (<Loader2 size={18} className="animate-spin" />) : 'Salvar Alterações'}
@@ -146,7 +146,7 @@ const ClinicaFinanceRow = ({ clinica, handleOpenHistoryModal, handleEditValue, h
 
     // Melhoria de UX: Ícones
     const StatusIcon = isPaga ? CheckCircle : AlertTriangle;
-    const statusClasses = isPaga ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+    const statusClasses = isPaga ? 'bg-indigo-100 text-green-800' : 'bg-red-100 text-red-800';
 
     return (
         <tr className="border-b hover:bg-slate-50">
@@ -355,7 +355,7 @@ export default function FinanceiroGeral() {
                 <h1 className="text-3xl font-bold text-slate-800">Financeiro Geral (Mensalidades)</h1>
             </div>
 
-            <p className="text-slate-600 border-l-4 border-green-400 pl-4 py-1 bg-green-50/50 p-2 rounded-md">
+            <p className="text-slate-600 border-l-4 border-green-400 pl-4 py-1 bg-indigo-50/50 p-2 rounded-md">
                 Status de pagamento referente ao mês atual (Vencimento: **{formatVencimento(getVencimentoMesCorrente())}**).
             </p>
 
@@ -415,7 +415,7 @@ export default function FinanceiroGeral() {
                                 onClick={() => setFilterStatus(status)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                     filterStatus === status 
-                                    ? 'bg-green-600 text-white shadow-md' 
+                                    ? 'bg-indigo-600 text-white shadow-md' 
                                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                                 }`}
                             >

@@ -21,7 +21,7 @@ const COLUNAS = [
   { id: 'agendado', titulo: 'Agendado', cor: 'bg-slate-50 border-slate-200', icone: <Clock size={16} className="text-slate-500"/> },
   { id: 'confirmado', titulo: 'Na Recepção', cor: 'bg-yellow-50/80 border-yellow-200', icone: <Armchair size={16} className="text-yellow-600"/> },
   { id: 'em_atendimento', titulo: 'Em Atendimento', cor: 'bg-blue-50/80 border-blue-200', icone: <Stethoscope size={16} className="text-blue-600"/> },
-  { id: 'realizado', titulo: 'Finalizado', cor: 'bg-emerald-50/80 border-emerald-200', icone: <CheckCircle2 size={16} className="text-emerald-600"/> }
+  { id: 'realizado', titulo: 'Finalizado', cor: 'bg-blue-50/80 border-blue-200', icone: <CheckCircle2 size={16} className="text-blue-600"/> }
 ];
 
 function KanbanCard({ agendamento, isOverlay }) {
@@ -39,10 +39,10 @@ function KanbanCard({ agendamento, isOverlay }) {
 
   if (isOverlay) {
     return (
-        <div className="bg-white p-3 rounded-xl shadow-2xl border-2 border-emerald-500 cursor-grabbing w-full rotate-2 scale-105">
+        <div className="bg-white p-3 rounded-xl shadow-2xl border-2 border-blue-500 cursor-grabbing w-full rotate-2 scale-105">
             <div className="flex justify-between items-start mb-2">
                 <span className="font-bold text-slate-800">{agendamento.pacienteNome || 'Paciente'}</span>
-                <span className="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md">{agendamento.hora}</span>
+                <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md">{agendamento.hora}</span>
             </div>
         </div>
     );
@@ -54,7 +54,7 @@ function KanbanCard({ agendamento, isOverlay }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-300 cursor-grab active:cursor-grabbing group mb-3 transition-all"
+      className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 cursor-grab active:cursor-grabbing group mb-3 transition-all"
     >
       <div className="flex justify-between items-start">
           <div className="flex flex-col overflow-hidden">
@@ -73,7 +73,7 @@ function KanbanCard({ agendamento, isOverlay }) {
              <span className="truncate">{agendamento.medicoNome || 'Sem médico'}</span>
          </div>
          {agendamento.valor > 0 && (
-             <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded shrink-0 ml-2">R$ {agendamento.valor}</span>
+             <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded shrink-0 ml-2">R$ {agendamento.valor}</span>
          )}
       </div>
     </div>

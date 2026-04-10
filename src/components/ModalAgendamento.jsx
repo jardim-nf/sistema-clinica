@@ -237,8 +237,8 @@ export default function ModalAgendamento({
           {/* 2. SELEÇÃO DE MÉDICO (FILTRADO) */}
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Profissional / Médico</label>
-             <div className={`flex items-center gap-3 p-2 border rounded-xl bg-slate-50 focus-within:border-emerald-500 focus-within:bg-white transition-colors ${errors.medicoId ? 'border-red-500' : 'border-slate-200'}`}>
-                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+             <div className={`flex items-center gap-3 p-2 border rounded-xl bg-slate-50 focus-within:border-blue-500 focus-within:bg-white transition-colors ${errors.medicoId ? 'border-red-500' : 'border-slate-200'}`}>
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                   <Stethoscope size={20} />
                 </div>
                 <div className="flex-1">
@@ -264,7 +264,7 @@ export default function ModalAgendamento({
 
              {errors.medicoId && <p className="text-xs text-red-500 mt-1 ml-2">{errors.medicoId.message}</p>}
              {medicoSelecionado && !errors.medicoId && (
-                <p className="text-xs text-emerald-600 mt-1 ml-2 font-medium">Especialidade: {medicoSelecionado.especialidade}</p>
+                <p className="text-xs text-blue-600 mt-1 ml-2 font-medium">Especialidade: {medicoSelecionado.especialidade}</p>
              )}
           </div>
 
@@ -272,7 +272,7 @@ export default function ModalAgendamento({
           <div>
              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Paciente</label>
              <div className={`flex items-center gap-3 p-2 border rounded-xl bg-slate-50 ${errors.pacienteId ? 'border-red-500' : 'border-slate-200'}`}>
-                <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
                   {iniciais}
                 </div>
                 <select 
@@ -289,7 +289,7 @@ export default function ModalAgendamento({
              
              {/* --- ÁREA DO WHATSAPP + TEMPLATES --- */}
              {pacienteSel && temTelefone && (
-               <div className="mt-4 p-3 bg-green-50/50 border border-green-100 rounded-xl space-y-3">
+               <div className="mt-4 p-3 bg-indigo-50/50 border border-green-100 rounded-xl space-y-3">
                   
                   {/* Seletor de Template */}
                   <div className="flex items-center gap-2">
@@ -326,7 +326,7 @@ export default function ModalAgendamento({
                   <button
                       type="button"
                       onClick={handleEnviarWhatsapp}
-                      className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md font-bold text-sm"
+                      className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md font-bold text-sm"
                   >
                       <MessageCircle size={18} />
                       Enviar Mensagem
@@ -392,7 +392,7 @@ export default function ModalAgendamento({
                 </button>
              )}
              <button type="button" onClick={onClose} disabled={isSubmitting} className="flex-1 py-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm">Cancelar</button>
-             <button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50">
+             <button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50">
                  {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : <Check size={18}/>} Salvar
              </button>
         </div>

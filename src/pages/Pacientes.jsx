@@ -39,14 +39,14 @@ const PacienteCard = ({ paciente, onEdit, onDelete }) => (
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     // MUDANÇA: Hover border verde
-    className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-emerald-100 transition-all duration-300"
+    className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 hover:shadow-md hover:border-blue-100 transition-all duration-300"
   >
     <div className="flex justify-between items-start mb-3">
       <div>
         <div className="flex items-center gap-3 mb-1">
           {/* MUDANÇA: Avatar verde */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-            <Users size={18} className="text-emerald-600" />
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+            <Users size={18} className="text-blue-600" />
           </div>
           <h3 className="font-bold text-lg text-slate-800 truncate">{paciente.nome}</h3>
         </div>
@@ -54,7 +54,7 @@ const PacienteCard = ({ paciente, onEdit, onDelete }) => (
           {/* MUDANÇA: Badge de status verde */}
           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
             paciente.status === 'ativo' 
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+              ? 'bg-blue-50 text-blue-700 border border-blue-100'
               : 'bg-slate-50 text-slate-600 border border-slate-100'
           }`}>
             {paciente.status || 'ativo'}
@@ -90,7 +90,7 @@ const PacienteCard = ({ paciente, onEdit, onDelete }) => (
     <button
       onClick={() => onEdit(paciente)}
       // MUDANÇA: Botão editar verde claro
-      className="mt-4 w-full py-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-600 rounded-xl font-bold text-sm hover:from-emerald-100 hover:to-teal-100 transition-all flex items-center justify-center gap-2 border border-emerald-100"
+      className="mt-4 w-full py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 rounded-xl font-bold text-sm hover:from-blue-100 hover:to-indigo-100 transition-all flex items-center justify-center gap-2 border border-blue-100"
     >
       <Edit size={16} /> Editar Paciente
     </button>
@@ -103,14 +103,14 @@ const PacienteRow = ({ paciente, onEdit, onDelete }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     // MUDANÇA: Hover com fundo verde suave
-    className="border-b hover:bg-gradient-to-r hover:from-emerald-50/30 hover:to-teal-50/30 transition-all duration-200 group cursor-pointer"
+    className="border-b hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-all duration-200 group cursor-pointer"
     onClick={() => onEdit(paciente)}
   >
     <td className="p-4">
       <div className="flex items-center gap-3">
         {/* MUDANÇA: Ícone verde */}
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-          <Users size={16} className="text-emerald-600" />
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+          <Users size={16} className="text-blue-600" />
         </div>
         <div>
           <p className="font-bold text-slate-800">{paciente.nome}</p>
@@ -145,7 +145,7 @@ const PacienteRow = ({ paciente, onEdit, onDelete }) => (
         {/* MUDANÇA: Status verde */}
         <span className={`px-2 py-1 rounded-full text-xs font-bold ${
           paciente.status === 'ativo' 
-            ? 'bg-emerald-100 text-emerald-700'
+            ? 'bg-blue-100 text-blue-700'
             : 'bg-slate-100 text-slate-600'
         }`}>
           {paciente.status || 'ativo'}
@@ -161,7 +161,7 @@ const PacienteRow = ({ paciente, onEdit, onDelete }) => (
             onEdit(paciente);
           }}
           // MUDANÇA: Botão editar contorno verde
-          className="p-2 text-emerald-600 hover:text-white hover:bg-emerald-600 rounded-lg transition-all border border-emerald-200 hover:border-emerald-600"
+          className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-all border border-blue-200 hover:border-blue-600"
           title="Editar"
         >
           <Edit size={16} />
@@ -312,7 +312,7 @@ export default function Pacientes() {
 
   return (
     // MUDANÇA: Gradiente de fundo verde suave
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -320,7 +320,7 @@ export default function Pacientes() {
             <div>
               <div className="flex items-center gap-4 mb-3">
                 {/* MUDANÇA: Ícone principal verde */}
-                <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-lg">
+                <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
                   <Users size={28} className="text-white" />
                 </div>
                 <div>
@@ -338,8 +338,8 @@ export default function Pacientes() {
                       <p className="text-2xl font-bold text-slate-800 mt-1">{stats.total}</p>
                     </div>
                     {/* MUDANÇA: Ícone stats verde */}
-                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
-                      <Users className="text-emerald-600" size={20} />
+                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                      <Users className="text-blue-600" size={20} />
                     </div>
                   </div>
                 </div>
@@ -348,10 +348,10 @@ export default function Pacientes() {
                     <div>
                       <p className="text-sm text-slate-500 font-medium">Pacientes Ativos</p>
                       {/* MUDANÇA: Texto verde */}
-                      <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.ativos}</p>
+                      <p className="text-2xl font-bold text-blue-600 mt-1">{stats.ativos}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
-                      <UserPlus className="text-emerald-600" size={20} />
+                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                      <UserPlus className="text-blue-600" size={20} />
                     </div>
                   </div>
                 </div>
@@ -375,7 +375,7 @@ export default function Pacientes() {
               whileTap={{ scale: 0.98 }}
               onClick={() => handleOpenModal(null)}
               // MUDANÇA: Botão principal verde
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-lg shadow-emerald-500/20 transition-all self-start"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-lg shadow-blue-500/20 transition-all self-start"
             >
               <Plus size={22} /> Novo Paciente
             </motion.button>
@@ -392,7 +392,7 @@ export default function Pacientes() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   // MUDANÇA: Focus ring verde
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-emerald-500/30 focus:bg-white transition-all text-slate-700"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/30 focus:bg-white transition-all text-slate-700"
                 />
               </div>
               
@@ -402,7 +402,7 @@ export default function Pacientes() {
                   // MUDANÇA: Botão toggle verde
                   className={`px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${
                     viewMode === 'grid' 
-                      ? 'bg-emerald-600 text-white' 
+                      ? 'bg-blue-600 text-white' 
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -412,7 +412,7 @@ export default function Pacientes() {
                   onClick={() => setViewMode('list')}
                   className={`px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${
                     viewMode === 'list' 
-                      ? 'bg-emerald-600 text-white' 
+                      ? 'bg-blue-600 text-white' 
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -431,7 +431,7 @@ export default function Pacientes() {
           {loading ? (
             <div className="text-center py-20">
               {/* MUDANÇA: Spinner verde */}
-              <Loader2 size={48} className="animate-spin mx-auto mb-4 text-emerald-600" />
+              <Loader2 size={48} className="animate-spin mx-auto mb-4 text-blue-600" />
               <p className="text-slate-500 font-medium">Carregando pacientes...</p>
             </div>
           ) : (
@@ -457,7 +457,7 @@ export default function Pacientes() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center py-16"
                       >
-                        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-emerald-100 rounded-full flex items-center justify-center">
+                        <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-blue-100 rounded-full flex items-center justify-center">
                           <Users size={40} className="text-slate-400" />
                         </div>
                         <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum paciente encontrado</h3>
@@ -467,7 +467,7 @@ export default function Pacientes() {
                         <button
                           onClick={() => handleOpenModal(null)}
                           // MUDANÇA: Botão empty state verde
-                          className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2"
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2"
                         >
                           <Plus size={20} /> Cadastrar Primeiro Paciente
                         </button>
@@ -481,7 +481,7 @@ export default function Pacientes() {
                   <table className="w-full">
                     <thead>
                       {/* MUDANÇA: Header tabela fundo suave verde */}
-                      <tr className="bg-gradient-to-r from-slate-50 to-emerald-50 border-b">
+                      <tr className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
                         <th className="p-4 text-left text-sm font-bold text-slate-700 uppercase">Paciente</th>
                         <th className="p-4 text-left text-sm font-bold text-slate-700 uppercase">Telefone</th>
                         <th className="p-4 text-left text-sm font-bold text-slate-700 uppercase">E-mail</th>
@@ -506,7 +506,7 @@ export default function Pacientes() {
                   
                   {filteredPacientes.length === 0 && (
                     <div className="text-center py-16">
-                      <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-emerald-100 rounded-full flex items-center justify-center">
+                      <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-blue-100 rounded-full flex items-center justify-center">
                         <Users size={40} className="text-slate-400" />
                       </div>
                       <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhum paciente encontrado</h3>
@@ -527,7 +527,7 @@ export default function Pacientes() {
                   {filteredPacientes.length > 0 && (
                     <div className="flex gap-2">
                       {/* MUDANÇA: Botão exportar hover verde */}
-                      <button className="px-4 py-2 text-slate-600 hover:text-emerald-600 text-sm font-medium flex items-center gap-2">
+                      <button className="px-4 py-2 text-slate-600 hover:text-blue-600 text-sm font-medium flex items-center gap-2">
                         <Download size={16} /> Exportar
                       </button>
                     </div>
@@ -552,7 +552,7 @@ export default function Pacientes() {
         whileTap={{ scale: 0.9 }}
         onClick={() => handleOpenModal(null)}
         // MUDANÇA: Botão FAB verde
-        className="fixed bottom-6 right-6 lg:hidden p-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full shadow-2xl z-50"
+        className="fixed bottom-6 right-6 lg:hidden p-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-2xl z-50"
       >
         <Plus size={24} />
       </motion.button>

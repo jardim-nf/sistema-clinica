@@ -121,7 +121,7 @@ export default function Relatorios() {
       const nomeClinica = userData?.nomeClinica || "CLÍNICA MÉDICA";
       const medicoNome = filtroMedico ? listaMedicos.find(m => m.id === filtroMedico)?.nome : "Todos";
       
-      // MUDANÇA: Cor do texto do PDF para Verde (Sanus)
+      // MUDANÇA: Cor do texto do PDF para Verde (IdeaSaúde)
       doc.setFontSize(22);
       doc.setTextColor(16, 185, 129); // #10b981 (Emerald-500)
       doc.text("RELATÓRIO FINANCEIRO", 105, 20, { align: "center" });
@@ -221,8 +221,8 @@ export default function Relatorios() {
         <div className="flex items-center gap-1">
           {trend !== undefined && trend !== 0 && (
              <>
-               {trend > 0 ? <ArrowUpRight size={16} className="text-emerald-500" /> : <ArrowDownRight size={16} className="text-red-500" />}
-               <span className={`text-sm font-bold ${trend > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{trend > 0 ? '+' : ''}{trend}%</span>
+               {trend > 0 ? <ArrowUpRight size={16} className="text-blue-500" /> : <ArrowDownRight size={16} className="text-red-500" />}
+               <span className={`text-sm font-bold ${trend > 0 ? 'text-blue-600' : 'text-red-600'}`}>{trend > 0 ? '+' : ''}{trend}%</span>
              </>
           )}
         </div>
@@ -234,12 +234,12 @@ export default function Relatorios() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/20">
+                <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/20">
                   <BarChart3 size={24} className="text-white" />
                 </div>
                 <div>
@@ -248,10 +248,10 @@ export default function Relatorios() {
                 </div>
             </div>
             <div className="flex gap-4">
-              <button onClick={baixarPDF} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 transition-all active:scale-95">
+              <button onClick={baixarPDF} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 transition-all active:scale-95">
                 <Download size={20} /> Gerar PDF
               </button>
-              <button onClick={enviarWhatsApp} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 transition-all active:scale-95">
+              <button onClick={enviarWhatsApp} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 transition-all active:scale-95">
                 <Share2 size={20} /> Compartilhar
               </button>
             </div>
@@ -261,13 +261,13 @@ export default function Relatorios() {
             <div className="flex gap-2 w-full md:w-auto">
               {['overview', 'transactions'].map((tab) => (
                 <button key={tab} onClick={() => setViewType(tab)} className={`flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold text-sm transition-all ${
-                    viewType === tab ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-600 hover:bg-slate-100'
+                    viewType === tab ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'
                   }`}>{tab === 'overview' ? 'Visão Geral' : 'Transações'}</button>
               ))}
             </div>
             <div className="relative w-full md:w-80">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><Stethoscope size={18} /></div>
-                <select value={filtroMedico} onChange={(e) => setFiltroMedico(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all appearance-none cursor-pointer">
+                <select value={filtroMedico} onChange={(e) => setFiltroMedico(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all appearance-none cursor-pointer">
                     <option value="">Todos os Médicos</option>
                     {listaMedicos.map(medico => <option key={medico.id} value={medico.id}>Dr(a). {medico.nome}</option>)}
                 </select>
@@ -275,18 +275,18 @@ export default function Relatorios() {
           </div>
         </div>
 
-        {loading ? <div className="text-center py-20"><div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-600 mb-4"></div></div> : viewType === 'overview' ? (
+        {loading ? <div className="text-center py-20"><div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div></div> : viewType === 'overview' ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <StatCard title="Faturamento Total" value={formatarMoeda(resumo.total)} icon={DollarSign} color="text-emerald-600" description={filtroMedico ? "Acumulado (Médico)" : "Acumulado histórico"} />
-              <StatCard title="Consultas (Mês)" value={resumo.consultasMes} icon={Calendar} color="text-teal-600" trend={resumo.crescimento} description="Volume mensal" />
-              <StatCard title="Ticket Médio" value={formatarMoeda(resumo.ticketMedio)} icon={Target} color="text-emerald-600" description="Por consulta" />
+              <StatCard title="Faturamento Total" value={formatarMoeda(resumo.total)} icon={DollarSign} color="text-blue-600" description={filtroMedico ? "Acumulado (Médico)" : "Acumulado histórico"} />
+              <StatCard title="Consultas (Mês)" value={resumo.consultasMes} icon={Calendar} color="text-indigo-600" trend={resumo.crescimento} description="Volume mensal" />
+              <StatCard title="Ticket Médio" value={formatarMoeda(resumo.ticketMedio)} icon={Target} color="text-blue-600" description="Por consulta" />
               <StatCard title="Pacientes Ativos" value={resumo.pacientesAtivos30Dias} icon={Activity} color="text-amber-600" description="Últimos 30 dias" />
             </div>
             {transacoes.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 <div id="main-chart" className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                  <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2"><TrendingUp size={20} className="text-emerald-600" />Faturamento Semestral</h3>
+                  <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2"><TrendingUp size={20} className="text-blue-600" />Faturamento Semestral</h3>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={dadosMensais}>
@@ -301,7 +301,7 @@ export default function Relatorios() {
                 </div>
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                   <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
-                    <Users size={20} className="text-teal-600" />
+                    <Users size={20} className="text-indigo-600" />
                     Status dos Agendamentos
                   </h3>
                   <div className="h-80">
@@ -363,10 +363,10 @@ export default function Relatorios() {
                        <td className="p-4">{t.tipo}</td>
                        <td className="p-4">
                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                           ['realizado', 'concluido'].includes(t.status?.toLowerCase()) ? 'bg-emerald-100 text-emerald-700' :
+                           ['realizado', 'concluido'].includes(t.status?.toLowerCase()) ? 'bg-blue-100 text-blue-700' :
                            ['cancelado'].includes(t.status?.toLowerCase()) ? 'bg-red-100 text-red-700' :
                            // MUDANÇA: O último badge azul foi trocado por teal
-                           'bg-teal-100 text-teal-700'
+                           'bg-indigo-100 text-indigo-700'
                          }`}>
                            {t.status}
                          </span>

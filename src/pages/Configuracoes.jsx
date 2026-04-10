@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebaseConfig';
 import { clinicaService } from '../services/clinicaService';
+import { medicoService } from '../services/medicoService';
 
 import { 
   doc, 
@@ -33,7 +34,7 @@ const TabButton = ({ id, icon: Icon, label, count, activeTab, setActiveTab }) =>
     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 flex-1 min-w-0 ${
       activeTab === id
         // MUDANÇA: Tab ativa verde
-        ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg'
+        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
         : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
     }`}
   >
@@ -41,7 +42,7 @@ const TabButton = ({ id, icon: Icon, label, count, activeTab, setActiveTab }) =>
     <span className="font-medium truncate">{label}</span>
     {count !== undefined && count > 0 && (
       // MUDANÇA: Badge verde claro
-      <span className="ml-auto bg-emerald-100 text-emerald-600 text-xs font-bold px-2 py-1 rounded-full">
+      <span className="ml-auto bg-blue-100 text-blue-600 text-xs font-bold px-2 py-1 rounded-full">
         {count}
       </span>
     )}
@@ -51,8 +52,8 @@ const TabButton = ({ id, icon: Icon, label, count, activeTab, setActiveTab }) =>
 const ConfigCard = ({ title, icon: Icon, children, color = 'emerald' }) => {
   const colors = {
     // MUDANÇA: Cores ajustadas para a paleta verde
-    emerald: 'from-emerald-50 to-emerald-100/50 border-emerald-100',
-    teal: 'from-teal-50 to-teal-100/50 border-teal-100',
+    emerald: 'from-blue-50 to-blue-100/50 border-blue-100',
+    teal: 'from-indigo-50 to-indigo-100/50 border-indigo-100',
     green: 'from-green-50 to-green-100/50 border-green-100',
   };
 
@@ -96,7 +97,7 @@ const useToastLocal = () => {
           <div
             key={t.id}
             className={`${
-              t.type === 'success' ? 'bg-emerald-100 text-emerald-700 border-emerald-400' :
+              t.type === 'success' ? 'bg-blue-100 text-blue-700 border-blue-400' :
               t.type === 'error' ? 'bg-red-100 text-red-700 border-red-400' :
               t.type === 'warning' ? 'bg-amber-100 text-amber-700 border-amber-400' :
               'bg-slate-100 text-slate-700 border-slate-400'
@@ -138,6 +139,9 @@ export default function Configuracoes() {
   const [secNome, setSecNome] = useState('');
   const [secEmail, setSecEmail] = useState('');
   const [secSenha, setSecSenha] = useState('123456');
+  const [secRole, setSecRole] = useState('secretaria');
+  const [secMedicoId, setSecMedicoId] = useState('');
+  const [todosMedicos, setTodosMedicos] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [loadingEquipe, setLoadingEquipe] = useState(false);
   const [filtroEquipe, setFiltroEquipe] = useState('todos');
@@ -192,6 +196,17 @@ export default function Configuracoes() {
     loadEquipe();
   }, [user, userData, filtroEquipe]);
 
+  useEffect(() => {
+    if (!user || activeTab !== 'equipe') return;
+    async function loadM() {
+      try {
+        const lista = await medicoService.listar(user.uid);
+        setTodosMedicos(lista);
+      } catch(e) { console.error('Erro ao listar medicos', e); }
+    }
+    loadM();
+  }, [user, activeTab]);
+
   const handleCriarSecretaria = async () => {
     if (!secEmail || !secSenha || !secNome) return toast.error("Preencha todos os campos.");
     if (secSenha.length < 6) return toast.error("A senha deve ter no mínimo 6 dígitos.");
@@ -209,16 +224,17 @@ export default function Configuracoes() {
       await setDoc(doc(db, "usuarios", novoUid), {
         email: secEmail,
         nome: secNome,
-        role: 'secretaria',
+        role: secRole,
         donoId: user.uid,
+        ...(secRole === 'medico' && { medicoId: secMedicoId }),
         createdAt: new Date(),
         ativo: true,
         ultimoAcesso: null
       });
 
       await signOut(secondaryAuth);
-      toast.success("✅ Secretária cadastrada com sucesso!");
-      setSecNome(''); setSecEmail(''); setSecSenha('123456');
+      toast.success("✅ Conta cadastrada com sucesso!");
+      setSecNome(''); setSecEmail(''); setSecSenha('123456'); setSecRole('secretaria'); setSecMedicoId('');
     } catch (err) {
       console.error("Erro criação secretária:", err);
       let msg = "Erro ao criar conta.";
@@ -301,7 +317,7 @@ export default function Configuracoes() {
           </div>
           <h2 className="text-2xl font-bold text-slate-800 mb-3">Acesso Restrito</h2>
           <p className="text-slate-600 mb-6">Esta área é exclusiva para administradores.</p>
-          <button onClick={logout} className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg">
+          <button onClick={logout} className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg">
             <LogOut size={18} /> Sair da Conta
           </button>
         </div>
@@ -311,7 +327,7 @@ export default function Configuracoes() {
 
   return (
     // MUDANÇA: Fundo verde suave
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
@@ -320,7 +336,7 @@ export default function Configuracoes() {
           </div>
           <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
             {/* MUDANÇA: Avatar verde */}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">{userData?.nome?.charAt(0) || 'A'}</span>
             </div>
             <div>
@@ -342,8 +358,8 @@ export default function Configuracoes() {
             <div className="lg:col-span-1">
               <ConfigCard title="Logo da Clínica" icon={Building} color="emerald">
                 <div className="relative group mb-4 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                  <div className="w-40 h-40 mx-auto rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-dashed border-slate-300 overflow-hidden flex items-center justify-center transition-all duration-300 hover:border-emerald-400 hover:shadow-lg">
-                    {loadingLogo ? <div className="flex flex-col items-center"><Loader2 className="animate-spin text-emerald-500" size={32} /><span className="mt-2 text-sm text-slate-500">Processando...</span></div> : logoBase64 ? <img src={logoBase64} alt="Logo" className="w-full h-full object-cover" /> : <div className="text-center p-4"><Camera className="w-12 h-12 text-slate-400 mx-auto mb-3" /><p className="text-sm text-slate-500">Clique para adicionar logo</p></div>}
+                  <div className="w-40 h-40 mx-auto rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-dashed border-slate-300 overflow-hidden flex items-center justify-center transition-all duration-300 hover:border-blue-400 hover:shadow-lg">
+                    {loadingLogo ? <div className="flex flex-col items-center"><Loader2 className="animate-spin text-blue-500" size={32} /><span className="mt-2 text-sm text-slate-500">Processando...</span></div> : logoBase64 ? <img src={logoBase64} alt="Logo" className="w-full h-full object-cover" /> : <div className="text-center p-4"><Camera className="w-12 h-12 text-slate-400 mx-auto mb-3" /><p className="text-sm text-slate-500">Clique para adicionar logo</p></div>}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-white p-4"><Upload size={24} /><span className="text-sm font-medium mt-2">Upload da Logo</span></div>
                   </div>
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} disabled={loadingLogo} />
@@ -354,29 +370,29 @@ export default function Configuracoes() {
             <div className="lg:col-span-2 space-y-6">
               <ConfigCard title="Informações Profissionais" icon={Stethoscope} color="emerald">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium text-slate-700 mb-2">Nome Completo *</label><input type="text" value={nomeMedico} onChange={(e) => setNomeMedico(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="Dr. João Silva" /></div>
-                  <div><label className="block text-sm font-medium text-slate-700 mb-2">CRM/UF *</label><input type="text" value={crm} onChange={(e) => setCrm(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="123456/SP" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-2">Nome Completo *</label><input type="text" value={nomeMedico} onChange={(e) => setNomeMedico(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Dr. João Silva" /></div>
+                  <div><label className="block text-sm font-medium text-slate-700 mb-2">CRM/UF *</label><input type="text" value={crm} onChange={(e) => setCrm(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="123456/SP" /></div>
                 </div>
               </ConfigCard>
 
               <ConfigCard title="Dados da Clínica" icon={Building} color="teal">
                 <form onSubmit={(e) => { e.preventDefault(); handleSalvarGeral(); }}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-medium text-slate-700 mb-2">Nome da Clínica *</label><input type="text" value={nomeClinica} onChange={(e) => setNomeClinica(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="Clínica Sanus" required /></div>
-                    <div><label className="block text-sm font-medium text-slate-700 mb-2">CNPJ/CPF *</label><input type="text" value={documento} onChange={(e) => setDocumento(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="00.000.000/0001-00" required /></div>
-                    <div><label className="block text-sm font-medium text-slate-700 mb-2">WhatsApp *</label><div className="relative"><Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="text" value={telefone} onChange={(e) => setTelefone(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="(11) 99999-9999" required /></div></div>
-                    <div><label className="block text-sm font-medium text-slate-700 mb-2">E-mail Institucional</label><div className="relative"><Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="email" value={emailClinica} onChange={(e) => setEmailClinica(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="contato@clinica.com" /></div></div>
-                    <div><label className="block text-sm font-medium text-slate-700 mb-2">Site</label><div className="relative"><Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="url" value={siteClinica} onChange={(e) => setSiteClinica(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="https://www.sua-clinica.com" /></div></div>
-                    <div><label className="block text-sm font-medium text-slate-700 mb-2">Horário de Funcionamento</label><input type="text" value={horarioFuncionamento} onChange={(e) => setHorarioFuncionamento(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="Seg-Sex: 8h às 18h" /></div>
-                    <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 mb-2">Endereço Completo *</label><textarea rows="3" value={endereco} onChange={(e) => setEndereco(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition resize-none" placeholder="Endereço da clínica..." required /></div>
-                    <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 mb-2">Sobre a Clínica</label><textarea rows="4" value={sobreClinica} onChange={(e) => setSobreClinica(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition resize-none" placeholder="Breve descrição..." /></div>
+                    <div><label className="block text-sm font-medium text-slate-700 mb-2">Nome da Clínica *</label><input type="text" value={nomeClinica} onChange={(e) => setNomeClinica(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Clínica IdeaSaúde" required /></div>
+                    <div><label className="block text-sm font-medium text-slate-700 mb-2">CNPJ/CPF *</label><input type="text" value={documento} onChange={(e) => setDocumento(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="00.000.000/0001-00" required /></div>
+                    <div><label className="block text-sm font-medium text-slate-700 mb-2">WhatsApp *</label><div className="relative"><Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="text" value={telefone} onChange={(e) => setTelefone(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="(11) 99999-9999" required /></div></div>
+                    <div><label className="block text-sm font-medium text-slate-700 mb-2">E-mail Institucional</label><div className="relative"><Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="email" value={emailClinica} onChange={(e) => setEmailClinica(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="contato@clinica.com" /></div></div>
+                    <div><label className="block text-sm font-medium text-slate-700 mb-2">Site</label><div className="relative"><Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="url" value={siteClinica} onChange={(e) => setSiteClinica(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="https://www.sua-clinica.com" /></div></div>
+                    <div><label className="block text-sm font-medium text-slate-700 mb-2">Horário de Funcionamento</label><input type="text" value={horarioFuncionamento} onChange={(e) => setHorarioFuncionamento(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Seg-Sex: 8h às 18h" /></div>
+                    <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 mb-2">Endereço Completo *</label><textarea rows="3" value={endereco} onChange={(e) => setEndereco(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none" placeholder="Endereço da clínica..." required /></div>
+                    <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 mb-2">Sobre a Clínica</label><textarea rows="4" value={sobreClinica} onChange={(e) => setSobreClinica(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none" placeholder="Breve descrição..." /></div>
                   </div>
                 </form>
               </ConfigCard>
 
               <div className="flex justify-end">
                 {/* MUDANÇA: Botão salvar verde */}
-                <button onClick={handleSalvarGeral} disabled={loadingSalvar} className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-semibold rounded-lg hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
+                <button onClick={handleSalvarGeral} disabled={loadingSalvar} className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
                   {loadingSalvar ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                   {loadingSalvar ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
@@ -393,21 +409,44 @@ export default function Configuracoes() {
                   <div><h3 className="text-lg font-semibold text-slate-900">Novo Membro da Equipe</h3><p className="text-slate-600 text-sm">Adicione secretárias ou assistentes</p></div>
                   <div className="flex items-center gap-2">
                     <button onClick={gerarRelatorioEquipe} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition flex items-center gap-2"><FileText size={18} /> Exportar</button>
-                    <select value={filtroEquipe} onChange={(e) => setFiltroEquipe(e.target.value)} className="px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"><option value="todos">Todos os membros</option><option value="ativos">Ativos</option><option value="inativos">Inativos</option></select>
+                    <select value={filtroEquipe} onChange={(e) => setFiltroEquipe(e.target.value)} className="px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"><option value="todos">Todos os membros</option><option value="ativos">Ativos</option><option value="inativos">Inativos</option></select>
                   </div>
                 </div>
 
                 <form onSubmit={(e) => { e.preventDefault(); handleCriarSecretaria(); }}>
                   <div className="bg-white rounded-xl border border-slate-200 p-5 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div><label className="block text-sm font-medium text-slate-700 mb-2">Nome Completo *</label><input type="text" value={secNome} onChange={(e) => setSecNome(e.target.value)} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="Maria Silva" required /></div>
-                      <div><label className="block text-sm font-medium text-slate-700 mb-2">E-mail de Acesso *</label><div className="relative"><Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="email" value={secEmail} onChange={(e) => setSecEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="maria@clinica.com" required /></div></div>
-                      <div><label className="block text-sm font-medium text-slate-700 mb-2">Senha Inicial *</label><div className="relative"><Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type={showPassword ? "text" : "password"} value={secSenha} onChange={(e) => setSecSenha(e.target.value)} className="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition font-mono" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div><p className="text-xs text-slate-500 mt-1">Mínimo 6 caracteres</p></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div><label className="block text-sm font-medium text-slate-700 mb-2">Nome Completo *</label><input type="text" value={secNome} onChange={(e) => setSecNome(e.target.value)} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Maria Silva" required /></div>
+                      <div><label className="block text-sm font-medium text-slate-700 mb-2">E-mail de Acesso *</label><div className="relative"><Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type="email" value={secEmail} onChange={(e) => setSecEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="maria@clinica.com" required /></div></div>
+                      
+                      <div><label className="block text-sm font-medium text-slate-700 mb-2">Tipo de Acesso *</label>
+                        <select value={secRole} onChange={(e) => setSecRole(e.target.value)} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                          <option value="secretaria">Secretária / Assistente</option>
+                          <option value="medico">Médico (Acesso Restrito)</option>
+                        </select>
+                      </div>
+
+                      {secRole === 'medico' ? (
+                        <div><label className="block text-sm font-medium text-slate-700 mb-2">Médico Vinculado *</label>
+                          <select value={secMedicoId} onChange={(e) => setSecMedicoId(e.target.value)} required className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="">Selecione um médico da equipe</option>
+                            {todosMedicos.map(m => (
+                              <option key={m.id} value={m.id}>{m.nome} - {m.especialidade}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div><label className="block text-sm font-medium text-slate-700 mb-2">Senha Inicial *</label><div className="relative"><Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type={showPassword ? "text" : "password"} value={secSenha} onChange={(e) => setSecSenha(e.target.value)} className="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div><p className="text-xs text-slate-500 mt-1">Mínimo 6 caracteres</p></div>
+                      )}
+
+                      {secRole === 'medico' && (
+                        <div className="md:col-span-2"><label className="block text-sm font-medium text-slate-700 mb-2">Senha Inicial *</label><div className="relative"><Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} /><input type={showPassword ? "text" : "password"} value={secSenha} onChange={(e) => setSecSenha(e.target.value)} className="w-full pl-10 pr-10 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div><p className="text-xs text-slate-500 mt-1">Mínimo 6 caracteres</p></div>
+                      )}
                     </div>
                     <div className="flex w-full gap-3 justify-between items-center">
                       <div className="text-sm text-slate-600"><p className="flex items-center gap-2"><AlertCircle size={16} className="text-amber-500" /> A senha será entregue ao novo membro para o primeiro acesso</p></div>
                       {/* MUDANÇA: Botão criar conta verde */}
-                      <button type="submit" disabled={loadingEquipe} className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">{loadingEquipe ? <Loader2 className="animate-spin" size={20} /> : <UserPlus size={20} />} {loadingEquipe ? 'Criando Conta...' : 'Criar Nova Conta'}</button>
+                      <button type="submit" disabled={loadingEquipe} className="px-6 py-3 bg-gradient-to-r from-blue-500 to-green-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-green-700 transition-all shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">{loadingEquipe ? <Loader2 className="animate-spin" size={20} /> : <UserPlus size={20} />} {loadingEquipe ? 'Criando Conta...' : 'Criar Nova Conta'}</button>
                     </div>
                   </div>
                 </form>
@@ -423,22 +462,22 @@ export default function Configuracoes() {
                       <div key={membro.id} className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-start gap-3">
                           <div className="relative">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${membro.ativo !== false ? 'bg-gradient-to-br from-emerald-100 to-emerald-200' : 'bg-gradient-to-br from-slate-100 to-slate-200'}`}>
-                              <span className={`font-bold text-lg ${membro.ativo !== false ? 'text-emerald-600' : 'text-slate-400'}`}>{membro.nome?.charAt(0)?.toUpperCase() || 'S'}</span>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${membro.ativo !== false ? 'bg-gradient-to-br from-blue-100 to-blue-200' : 'bg-gradient-to-br from-slate-100 to-slate-200'}`}>
+                              <span className={`font-bold text-lg ${membro.ativo !== false ? 'text-blue-600' : 'text-slate-400'}`}>{membro.nome?.charAt(0)?.toUpperCase() || 'S'}</span>
                             </div>
-                            {membro.ativo !== false && <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center"><CheckCircle size={10} className="text-white" /></div>}
+                            {membro.ativo !== false && <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 rounded-full border-2 border-white flex items-center justify-center"><CheckCircle size={10} className="text-white" /></div>}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start gap-2">
                               <div className="min-w-0"><h4 className="font-semibold text-slate-900 truncate">{membro.nome || 'Secretária'}</h4><p className="text-sm text-slate-600 truncate flex items-center gap-1"><Mail size={14} /> {membro.email}</p></div>
                               <div className="flex gap-1 flex-shrink-0">
-                                <button onClick={() => handleAlternarStatusSecretaria(membro.id, membro.ativo !== false)} className={`p-2 rounded-lg transition ${membro.ativo !== false ? 'bg-green-100 text-green-600 hover:bg-green-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title={membro.ativo !== false ? 'Desativar' : 'Ativar'}>{membro.ativo !== false ? <CheckCircle size={16} /> : <XCircle size={16} />}</button>
-                                <button onClick={() => copiarParaClipboard(membro.email, 'E-mail copiado')} className="p-2 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition" title="Copiar e-mail"><Copy size={16} /></button>
+                                <button onClick={() => handleAlternarStatusSecretaria(membro.id, membro.ativo !== false)} className={`p-2 rounded-lg transition ${membro.ativo !== false ? 'bg-indigo-100 text-green-600 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title={membro.ativo !== false ? 'Desativar' : 'Ativar'}>{membro.ativo !== false ? <CheckCircle size={16} /> : <XCircle size={16} />}</button>
+                                <button onClick={() => copiarParaClipboard(membro.email, 'E-mail copiado')} className="p-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition" title="Copiar e-mail"><Copy size={16} /></button>
                                 <button onClick={() => handleExcluirSecretaria(membro.id, membro.nome)} className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition" title="Remover permanentemente"><Trash2 size={16} /></button>
                               </div>
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2">
-                              <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">{membro.role === 'secretaria' ? 'Secretária' : 'Assistente'}</span>
+                              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">{membro.role === 'medico' ? 'Médico' : (membro.role === 'secretaria' ? 'Secretária' : 'Assistente')}</span>
                               <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-full">{membro.createdAt?.toLocaleDateString('pt-BR') || 'Data não disponível'}</span>
                             </div>
                           </div>
@@ -455,7 +494,7 @@ export default function Configuracoes() {
 
       <div className="mt-12 pt-8 border-t border-slate-200">
         <div className="text-center text-sm text-slate-500">
-          <p>Sanus v2.0 • Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
+          <p>IdeaSaúde v2.0 • Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
           <p className="mt-1">© {new Date().getFullYear()} Todos os direitos reservados</p>
         </div>
       </div>

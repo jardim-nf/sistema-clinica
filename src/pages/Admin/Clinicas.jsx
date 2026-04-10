@@ -20,7 +20,7 @@ const ClinicaRow = ({ clinica, handleToggleBlock }) => {
 
     // Definição de Ícone e Classes para o Status
     const StatusIcon = clinica.isBlocked ? AlertTriangle : CheckCircle;
-    const statusClasses = clinica.isBlocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+    const statusClasses = clinica.isBlocked ? 'bg-red-100 text-red-800' : 'bg-indigo-100 text-green-800';
 
     return (
         <tr className="border-b hover:bg-slate-50">
@@ -38,7 +38,7 @@ const ClinicaRow = ({ clinica, handleToggleBlock }) => {
                 <button
                     onClick={() => handleToggleBlock(clinica)}
                     className={`px-3 py-1 text-xs rounded-lg transition-colors flex items-center gap-1 ${
-                        clinica.isBlocked ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'
+                        clinica.isBlocked ? 'bg-indigo-500 hover:bg-indigo-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'
                     }`}
                 >
                     <ActionIcon size={14} /> {actionText}

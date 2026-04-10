@@ -25,9 +25,9 @@ export default function ProntuarioAvancado() {
   const { showToast } = useToast();
 
   const abas = [
-    { id: 'evolucao', label: 'Evolução', icon: ClipboardList, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { id: 'evolucao', label: 'Evolução', icon: ClipboardList, color: 'text-blue-600', bg: 'bg-blue-50' },
     // MUDANÇA: Receita agora é Teal (verde-azulado) para harmonizar
-    { id: 'receita', label: 'Receita', icon: Pill, color: 'text-teal-600', bg: 'bg-teal-50' },
+    { id: 'receita', label: 'Receita', icon: Pill, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { id: 'atestado', label: 'Atestado', icon: FileBadge, color: 'text-amber-600', bg: 'bg-amber-50' },
     { id: 'declaracao', label: 'Declaração', icon: FileCheck, color: 'text-purple-600', bg: 'bg-purple-50' }
   ];
@@ -200,7 +200,7 @@ export default function ProntuarioAvancado() {
                     type="text" 
                     placeholder="Buscar paciente..." 
                     // MUDANÇA: Focus ring verde
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all" 
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" 
                     value={busca} 
                     onChange={e => setBusca(e.target.value)} 
                   />
@@ -215,7 +215,7 @@ export default function ProntuarioAvancado() {
                       w-full p-4 mb-3 rounded-2xl text-left transition-all 
                       ${pacienteSelecionado?.id === p.id 
                         // MUDANÇA: Seleção verde
-                        ? 'bg-emerald-600 text-white shadow-lg' 
+                        ? 'bg-blue-600 text-white shadow-lg' 
                         : 'hover:bg-slate-50'
                       }
                     `}
@@ -269,7 +269,7 @@ export default function ProntuarioAvancado() {
                   <button 
                     onClick={handleSalvarRegistro}
                     // MUDANÇA: Botão salvar verde
-                    className="px-4 lg:px-6 py-2 lg:py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all uppercase tracking-wider"
+                    className="px-4 lg:px-6 py-2 lg:py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 shadow-md shadow-blue-200 transition-all uppercase tracking-wider"
                   >
                     <Save size={18} /> 
                     <span className="hidden sm:inline">Salvar {abaAtiva}</span>
@@ -313,7 +313,7 @@ export default function ProntuarioAvancado() {
                         {abaAtiva === 'evolucao' && (
                           <input 
                             // MUDANÇA: Border focus verde
-                            className="w-full text-2xl lg:text-4xl font-extrabold outline-none border-b border-slate-50 pb-4 mb-6 lg:mb-8 focus:border-emerald-500 transition-all placeholder:text-slate-200" 
+                            className="w-full text-2xl lg:text-4xl font-extrabold outline-none border-b border-slate-50 pb-4 mb-6 lg:mb-8 focus:border-blue-500 transition-all placeholder:text-slate-200" 
                             placeholder="Título da Evolução..." 
                             value={formEvolucao.titulo} 
                             onChange={e => setFormEvolucao({...formEvolucao, titulo: e.target.value})} 
@@ -368,7 +368,7 @@ export default function ProntuarioAvancado() {
                         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                           <h3 className="font-bold text-xs text-slate-400 uppercase mb-6 flex items-center gap-3 tracking-[0.2em]">
                             {/* MUDANÇA: Ícone histórico verde */}
-                            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                               <Clock size={16}/>
                             </div>
                             Histórico Recente
@@ -376,9 +376,9 @@ export default function ProntuarioAvancado() {
                           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                             {historico.slice(0, 3).map(h => ( 
                               // MUDANÇA: Hover item histórico verde
-                              <div key={h.id} className="p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-emerald-100 hover:bg-white transition-all shadow-sm">
-                                <div className="flex justify-between text-[10px] font-bold text-emerald-600 uppercase mb-2">
-                                  <span className="px-2 py-0.5 bg-emerald-50 rounded-md tracking-wider truncate max-w-[50%]">
+                              <div key={h.id} className="p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm">
+                                <div className="flex justify-between text-[10px] font-bold text-blue-600 uppercase mb-2">
+                                  <span className="px-2 py-0.5 bg-blue-50 rounded-md tracking-wider truncate max-w-[50%]">
                                     {h.tipo}
                                   </span>
                                   <span className="text-slate-400 font-medium text-[9px]">
@@ -391,7 +391,7 @@ export default function ProntuarioAvancado() {
                                 <button 
                                   onClick={() => setRegistroVisualizar(h)}
                                   // MUDANÇA: Botão detalhes verde
-                                  className="w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm uppercase tracking-widest"
+                                  className="w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm uppercase tracking-widest"
                                 >
                                   Detalhes
                                 </button>
@@ -403,7 +403,7 @@ export default function ProntuarioAvancado() {
                               <button 
                                 onClick={() => setRegistroVisualizar(historico[0])} 
                                 // MUDANÇA: Link verde
-                                className="text-sm text-emerald-600 font-medium hover:text-emerald-800"
+                                className="text-sm text-blue-600 font-medium hover:text-blue-800"
                               >
                                 Ver mais {historico.length - 3} registros...
                               </button>
@@ -418,7 +418,7 @@ export default function ProntuarioAvancado() {
                       <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col sticky top-0 h-[calc(100vh-280px)]">
                         <h3 className="font-bold text-xs text-slate-400 uppercase mb-8 flex items-center gap-3 tracking-[0.2em]">
                           {/* MUDANÇA: Ícone histórico verde */}
-                          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                             <Clock size={16}/>
                           </div>
                           Histórico Recente
@@ -426,9 +426,9 @@ export default function ProntuarioAvancado() {
                         <div className="flex-1 overflow-y-auto pr-2 space-y-5 custom-scrollbar">
                           {historico.map(h => (
                             // MUDANÇA: Hover item histórico verde
-                            <div key={h.id} className="p-6 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-emerald-100 hover:bg-white transition-all shadow-sm">
-                              <div className="flex justify-between text-[10px] font-bold text-emerald-600 uppercase mb-3">
-                                <span className="px-2 py-0.5 bg-emerald-50 rounded-md tracking-wider truncate max-w-[50%]">
+                            <div key={h.id} className="p-6 bg-slate-50 rounded-[1.5rem] border border-transparent hover:border-blue-100 hover:bg-white transition-all shadow-sm">
+                              <div className="flex justify-between text-[10px] font-bold text-blue-600 uppercase mb-3">
+                                <span className="px-2 py-0.5 bg-blue-50 rounded-md tracking-wider truncate max-w-[50%]">
                                   {h.tipo}
                                 </span>
                                 <span className="text-slate-400 font-medium text-[9px] lg:text-[10px]">
@@ -441,7 +441,7 @@ export default function ProntuarioAvancado() {
                               <button 
                                 onClick={() => setRegistroVisualizar(h)}
                                 // MUDANÇA: Botão detalhes verde
-                                className="w-full py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm uppercase tracking-widest"
+                                className="w-full py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm uppercase tracking-widest"
                               >
                                 Detalhes
                               </button>
@@ -470,7 +470,7 @@ export default function ProntuarioAvancado() {
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 // MUDANÇA: Botão buscar verde
-                className="mt-6 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold lg:hidden"
+                className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold lg:hidden"
               >
                 Buscar Paciente
               </button>

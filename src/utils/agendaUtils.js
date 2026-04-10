@@ -14,8 +14,8 @@ export const getCorStatus = (status) => {
 
 export const getStatusBadge = (status) => {
   const config = {
-    agendado: { label: 'Agendado', color: 'bg-emerald-50 text-emerald-700' },
-    confirmado: { label: 'Confirmado', color: 'bg-teal-100 text-teal-800' },
+    agendado: { label: 'Agendado', color: 'bg-blue-50 text-blue-700' },
+    confirmado: { label: 'Confirmado', color: 'bg-indigo-100 text-indigo-800' },
     em_atendimento: { label: 'Em Atendimento', color: 'bg-blue-100 text-blue-800' },
     realizado: { label: 'Realizado', color: 'bg-slate-100 text-slate-800' },
     faltou: { label: 'Faltou', color: 'bg-red-100 text-red-800' },

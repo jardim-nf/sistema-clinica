@@ -150,7 +150,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="nome"
                   value={formData.nome}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.nome ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.nome ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="Ex: João da Silva"
                 />
               </div>
@@ -174,7 +174,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   className={`w-full pl-10 pr-4 py-3 rounded-xl focus:outline-none focus:ring-4 transition-all ${
                     paciente 
                       ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200' 
-                      : `bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'}`
+                      : `bg-slate-50 border ${errors.cpf ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'}`
                   }`}
                   placeholder="000.000.000-00"
                 />
@@ -193,7 +193,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   value={formData.telefone}
                   onChange={handleChange}
                   maxLength={15}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.telefone ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-emerald-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.telefone ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:ring-blue-200'} rounded-xl focus:outline-none focus:ring-4 transition-all`}
                   placeholder="(00) 00000-0000"
                 />
               </div>
@@ -202,7 +202,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
 
             {/* --- SEÇÃO DE ENDEREÇO (AGORA OPCIONAL) --- */}
             <div className="md:col-span-2 mt-2 pt-4 border-t border-slate-100">
-                <h3 className="text-sm font-bold text-emerald-600 flex items-center gap-2 mb-4">
+                <h3 className="text-sm font-bold text-blue-600 flex items-center gap-2 mb-4">
                     <MapPin size={18} /> Endereço Residencial <span className="text-xs font-normal text-slate-400">(Opcional)</span>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -214,7 +214,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                             name="endereco"
                             value={formData.endereco}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
                             placeholder="Rua, Avenida, etc."
                         />
                     </div>
@@ -227,7 +227,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                             name="numero"
                             value={formData.numero}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
                         />
                     </div>
 
@@ -239,7 +239,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                             name="bairro"
                             value={formData.bairro}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
                         />
                     </div>
 
@@ -251,7 +251,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                             name="complemento"
                             value={formData.complemento}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
                             placeholder="Apto, Bloco, etc."
                         />
                     </div>
@@ -264,7 +264,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                             name="cidade"
                             value={formData.cidade}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
                         />
                     </div>
 
@@ -275,7 +275,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                             name="estado"
                             value={formData.estado}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all appearance-none text-slate-600"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all appearance-none text-slate-600"
                         >
                             <option value="">UF</option>
                             <option value="RJ">RJ</option>
@@ -297,7 +297,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
                   placeholder="exemplo@email.com"
                 />
               </div>
@@ -313,7 +313,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="dataNascimento"
                   value={formData.dataNascimento}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all text-slate-600"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all text-slate-600"
                 />
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all appearance-none text-slate-600"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all appearance-none text-slate-600"
                 >
                   <option value="ativo">Ativo</option>
                   <option value="inativo">Inativo</option>
@@ -343,7 +343,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
                 value={formData.observacoes}
                 onChange={handleChange}
                 rows="3"
-                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all resize-none"
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all resize-none"
                 placeholder="Histórico médico breve ou observações importantes..."
               />
             </div>
@@ -363,7 +363,7 @@ export default function ModalPaciente({ isOpen, onClose, onSave, paciente }) {
           <button
             type="submit"
             form="pacienteForm"
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2"
           >
             <Save size={18} />
             {paciente ? 'Salvar Alterações' : 'Cadastrar Paciente'}

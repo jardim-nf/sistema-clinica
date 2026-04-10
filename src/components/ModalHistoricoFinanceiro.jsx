@@ -1,4 +1,4 @@
-// src/components/ModalHistoricoFinanceiro.jsx - Identidade Sanus (Verde)
+// src/components/ModalHistoricoFinanceiro.jsx - Identidade IdeaSaúde (Verde)
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'; 
 import { 
@@ -278,7 +278,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
     if (loading) {
         return <ModalWrapper onClose={onClose}>
             <div className="text-center py-20 text-slate-500">
-                <Loader2 size={32} className="animate-spin mx-auto mb-4 text-emerald-500" />
+                <Loader2 size={32} className="animate-spin mx-auto mb-4 text-blue-500" />
                 Carregando histórico...
             </div>
         </ModalWrapper>;
@@ -287,7 +287,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
     return (
         <ModalWrapper onClose={onClose}>
             <h3 className="text-2xl font-bold mb-1 text-slate-800 flex items-center gap-2">
-                <DollarSign size={24} className="text-emerald-600"/> Histórico Financeiro
+                <DollarSign size={24} className="text-blue-600"/> Histórico Financeiro
             </h3>
             <p className="text-sm text-slate-600 mb-6">
                 Clínica: <span className="font-semibold">{clinica.nomeFantasia}</span> (Contrato: {formatCurrency(clinica.valorMensalidade || 2500)})
@@ -297,15 +297,15 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                 {/* MUDANÇA: Botão verde */}
                 <button
                     onClick={() => setIsRegistering(p => !p)}
-                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                     disabled={isProcessingPayment}
                 >
                     <Plus size={18} /> {isRegistering ? 'Cancelar Registro' : 'Registrar Pagamento Manual'}
                 </button>
 
                 {isRegistering && (
-                    <form onSubmit={handleRegisterPayment} className="mt-4 p-4 border border-emerald-200 rounded-lg bg-emerald-50/50 space-y-3">
-                        <h4 className='font-semibold text-emerald-700 flex items-center gap-2'>
+                    <form onSubmit={handleRegisterPayment} className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50/50 space-y-3">
+                        <h4 className='font-semibold text-blue-700 flex items-center gap-2'>
                             <DollarSign size={16} /> Dados do Pagamento
                         </h4>
                         
@@ -315,7 +315,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                                 <input type="number" step="0.01" required
                                     value={newPayment.valorPago}
                                     onChange={(e) => setNewPayment({...newPayment, valorPago: e.target.value})}
-                                    className="w-full p-2 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                                    className="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                             <div>
@@ -323,7 +323,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                                 <input type="text" required
                                     value={newPayment.mesReferencia}
                                     onChange={(e) => setNewPayment({...newPayment, mesReferencia: e.target.value})}
-                                    className="w-full p-2 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                                    className="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                     maxLength={6}
                                 />
                             </div>
@@ -332,7 +332,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                                 <input type="date" required
                                     value={newPayment.dataPagamento}
                                     onChange={(e) => setNewPayment({...newPayment, dataPagamento: e.target.value})}
-                                    className="w-full p-2 border rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                                    className="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>
@@ -341,13 +341,13 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                             <label className="block text-xs font-medium text-slate-600">Comprovante (Opcional)</label>
                             <input type="file"
                                 onChange={(e) => setNewPayment({...newPayment, comprovanteFile: e.target.files[0]})}
-                                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white file:text-emerald-700 hover:file:bg-emerald-50"
+                                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white file:text-blue-700 hover:file:bg-blue-50"
                             />
                         </div>
 
                         <button 
                             type="submit" 
-                            className="w-full py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             disabled={isProcessingPayment}
                         >
                             {isProcessingPayment ? <Loader2 size={18} className="animate-spin" /> : 'Confirmar Pagamento'}
@@ -363,7 +363,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                     <div 
                         key={month.referenciaMesAno} 
                         className={`p-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between border ${
-                            month.status === 'PAGO' ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
+                            month.status === 'PAGO' ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'
                         }`}
                     >
                         <div className="flex items-center gap-3 w-full md:w-1/4 mb-2 md:mb-0">
@@ -383,7 +383,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                             
                             <div className="text-left md:text-right w-full md:w-1/4">
                                 <span className={`px-3 py-1 text-xs font-bold rounded-full ${
-                                    month.status === 'PAGO' ? 'text-emerald-800 bg-emerald-200' : 'text-red-800 bg-red-200'
+                                    month.status === 'PAGO' ? 'text-blue-800 bg-blue-200' : 'text-red-800 bg-red-200'
                                 }`}>{month.status}</span>
                                 <p className="text-xs text-slate-500 mt-1">{month.dataRegistro}</p>
                             </div>
@@ -400,7 +400,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
                                     // MUDANÇA: Botão marcar pago verde
                                     <button 
                                         onClick={() => handleUpdateStatus(month.referenciaMesAno, true)}
-                                        className="w-full px-3 py-1 bg-emerald-500 text-white text-xs rounded-lg hover:bg-emerald-600 transition-colors"
+                                        className="w-full px-3 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
                                     >
                                         Marcar Pago
                                     </button>
@@ -409,7 +409,7 @@ export default function ModalHistoricoFinanceiro({ clinica, onClose, fetchSummar
 
                             <div className="w-full md:w-auto flex items-center justify-start md:justify-end">
                                 {month.comprovanteUrl ? (
-                                    <div className="flex items-center gap-2 text-sm text-emerald-600">
+                                    <div className="flex items-center gap-2 text-sm text-blue-600">
                                         <FileText size={18} />
                                         <a 
                                             href={month.comprovanteUrl} 

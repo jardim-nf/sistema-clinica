@@ -40,7 +40,7 @@ export function ToastProvider({ children }) {
             key={toast.id}
             className={`
               flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300 animate-fade-in-down
-              ${toast.type === 'success' ? 'bg-green-600' : ''}
+              ${toast.type === 'success' ? 'bg-indigo-600' : ''}
               ${toast.type === 'error' ? 'bg-red-600' : ''}
               ${toast.type === 'warning' ? 'bg-yellow-600' : ''}
               ${toast.type === 'info' ? 'bg-blue-600' : ''}

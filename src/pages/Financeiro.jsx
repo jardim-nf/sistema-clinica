@@ -163,7 +163,7 @@ export default function Financeiro() {
 
   const pieData = Object.entries(dadosCategorias).map(([name, value]) => ({ name, value }));
   
-  // MUDANÇA: Cores atualizadas para a paleta Sanus (Verde, Teal, etc)
+  // MUDANÇA: Cores atualizadas para a paleta IdeaSaúde (Verde, Teal, etc)
   const COLORS = ['#10b981', '#14b8a6', '#0ea5e9', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const StatCard = ({ title, value, icon: Icon, color, trend, description }) => (
@@ -173,8 +173,8 @@ export default function Financeiro() {
           <Icon size={24} className={color} />
         </div>
         <div className="flex items-center gap-1">
-          {trend > 0 ? <ArrowUpRight size={16} className="text-emerald-500" /> : <ArrowDownRight size={16} className="text-red-500" />}
-          <span className={`text-sm font-bold ${trend > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {trend > 0 ? <ArrowUpRight size={16} className="text-blue-500" /> : <ArrowDownRight size={16} className="text-red-500" />}
+          <span className={`text-sm font-bold ${trend > 0 ? 'text-blue-600' : 'text-red-600'}`}>
             {trend > 0 ? '+' : ''}{trend}%
           </span>
         </div>
@@ -186,12 +186,12 @@ export default function Financeiro() {
   );
 
   const TransacaoRow = ({ item }) => (
-    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="p-4 rounded-xl border border-slate-100 hover:border-emerald-100 hover:shadow-sm transition-all bg-white group">
+    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="p-4 rounded-xl border border-slate-100 hover:border-blue-100 hover:shadow-sm transition-all bg-white group">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* MUDANÇA: Ícones de receita/despesa com verde/vermelho */}
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-            item.tipo === 'receita' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'
+            item.tipo === 'receita' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-red-50 text-red-600 border border-red-100'
           }`}>
             {item.tipo === 'receita' ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
           </div>
@@ -200,7 +200,7 @@ export default function Financeiro() {
               <h4 className="font-bold text-slate-800 truncate">{item.descricao}</h4>
               {/* MUDANÇA: Badge de Consulta Teal */}
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                item.origem === 'agenda' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-600'
+                item.origem === 'agenda' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'
               }`}>
                 {item.origem === 'agenda' ? 'Consulta' : 'Despesa'}
               </span>
@@ -214,7 +214,7 @@ export default function Financeiro() {
         
         <div className="flex items-center gap-4 pl-2">
           <div className="text-right">
-            <p className={`font-bold text-base md:text-lg whitespace-nowrap ${item.tipo === 'receita' ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p className={`font-bold text-base md:text-lg whitespace-nowrap ${item.tipo === 'receita' ? 'text-blue-600' : 'text-red-600'}`}>
               {item.tipo === 'receita' ? '+' : '-'} {formatMoney(item.valor)}
             </p>
             <div className="flex items-center justify-end gap-1 text-xs text-slate-400">
@@ -233,14 +233,14 @@ export default function Financeiro() {
 
   return (
     // MUDANÇA: Fundo verde suave
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
             <div>
               <div className="flex items-center gap-4 mb-4">
                 {/* MUDANÇA: Ícone Header Verde */}
-                <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl shadow-emerald-500/20">
+                <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/20">
                   <DollarSign size={24} className="text-white" />
                 </div>
                 <div>
@@ -253,7 +253,7 @@ export default function Financeiro() {
             <div className="flex w-full gap-4">
               <button 
                 onClick={() => setModalOpen(true)}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
               >
                 <Plus size={20} /> Nova Despesa
               </button>
@@ -264,11 +264,11 @@ export default function Financeiro() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard title="Receitas Totais" value={formatMoney(totalReceitas)} icon={TrendingUp} color="text-emerald-600" trend={12.5} description="Mês atual" />
+            <StatCard title="Receitas Totais" value={formatMoney(totalReceitas)} icon={TrendingUp} color="text-blue-600" trend={12.5} description="Mês atual" />
             <StatCard title="Despesas Totais" value={formatMoney(totalDespesas)} icon={TrendingDown} color="text-red-600" trend={-3.2} description="Mês atual" />
-            <StatCard title="Saldo Líquido" value={formatMoney(saldo)} icon={DollarSign} color={saldo >= 0 ? "text-emerald-600" : "text-red-600"} trend={saldo >= 0 ? 8.7 : -5.3} description="Resultado atual" />
+            <StatCard title="Saldo Líquido" value={formatMoney(saldo)} icon={DollarSign} color={saldo >= 0 ? "text-blue-600" : "text-red-600"} trend={saldo >= 0 ? 8.7 : -5.3} description="Resultado atual" />
             {/* MUDANÇA: Cor do card 'Hoje' para Teal */}
-            <StatCard title="Receitas Hoje" value={formatMoney(receitasHoje)} icon={Wallet} color="text-teal-600" trend={24} description="Dia atual" />
+            <StatCard title="Receitas Hoje" value={formatMoney(receitasHoje)} icon={Wallet} color="text-indigo-600" trend={24} description="Dia atual" />
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-8">
@@ -281,7 +281,7 @@ export default function Financeiro() {
                   value={termoBusca}
                   onChange={(e) => setTermoBusca(e.target.value)}
                   // MUDANÇA: Focus ring verde
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-emerald-500/30 focus:bg-white transition-all text-slate-700"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/30 focus:bg-white transition-all text-slate-700"
                 />
               </div>
               
@@ -294,9 +294,9 @@ export default function Financeiro() {
                       // MUDANÇA: Botões de filtro verdes
                       className={`px-4 py-2 rounded-lg font-bold text-sm transition-all whitespace-nowrap ${
                         filterType === type
-                          ? type === 'receita' ? 'bg-emerald-600 text-white' 
+                          ? type === 'receita' ? 'bg-blue-600 text-white' 
                           : type === 'despesa' ? 'bg-red-600 text-white'
-                          : 'bg-emerald-600 text-white'
+                          : 'bg-blue-600 text-white'
                           : 'text-slate-600 hover:bg-white'
                       }`}
                     >
@@ -326,7 +326,7 @@ export default function Financeiro() {
                   // MUDANÇA: Botões de período verdes
                   className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap ${
                     selectedPeriod === period
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
                       : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
                   }`}
                 >
@@ -344,7 +344,7 @@ export default function Financeiro() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
               <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
-                <TrendingUp size={20} className="text-emerald-600" /> Evolução Mensal
+                <TrendingUp size={20} className="text-blue-600" /> Evolução Mensal
               </h3>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -363,7 +363,7 @@ export default function Financeiro() {
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
               <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
                 {/* MUDANÇA: Ícone verde */}
-                <PieChart size={20} className="text-emerald-600" /> Despesas por Categoria
+                <PieChart size={20} className="text-blue-600" /> Despesas por Categoria
               </h3>
               <div className="h-80 flex items-center justify-center">
                 {pieData.length > 0 ? (
@@ -396,9 +396,9 @@ export default function Financeiro() {
               <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="p-4 bg-slate-50 animate-pulse rounded-xl h-20"></div>)}</div>
             ) : transacoesFiltradas.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-emerald-50 rounded-full flex items-center justify-center"><DollarSign size={40} className="text-slate-300" /></div>
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-blue-50 rounded-full flex items-center justify-center"><DollarSign size={40} className="text-slate-300" /></div>
                 <h3 className="text-xl font-bold text-slate-700 mb-2">Nenhuma transação</h3>
-                <button onClick={() => setModalOpen(true)} className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2"><Plus size={20} /> Registrar</button>
+                <button onClick={() => setModalOpen(true)} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2"><Plus size={20} /> Registrar</button>
               </div>
             ) : (
               <AnimatePresence>{transacoesFiltradas.map((item) => <TransacaoRow key={item.id + item.origem} item={item} />)}</AnimatePresence>
@@ -409,7 +409,7 @@ export default function Financeiro() {
             <div className="flex justify-between items-center">
               <div className="text-sm text-slate-600">
                 <span className="font-bold">{transacoesFiltradas.length}</span> transações • 
-                <span className="text-emerald-600 font-bold mx-2">+{formatMoney(totalReceitas)}</span> • 
+                <span className="text-blue-600 font-bold mx-2">+{formatMoney(totalReceitas)}</span> • 
                 <span className="text-red-600 font-bold mx-2">-{formatMoney(totalDespesas)}</span>
               </div>
               <button onClick={carregarDados} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all"><RefreshCw size={16} /> Atualizar</button>

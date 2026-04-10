@@ -42,7 +42,8 @@ export default function Agenda() {
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const [medicoFiltro, setMedicoFiltro] = useState('');
+  const isMedico = userData?.role === 'medico';
+  const [medicoFiltro, setMedicoFiltro] = useState(isMedico ? (userData.medicoId || '') : '');
 
   const idDaClinica = userData?.clinicaId || userData?.id;
 
@@ -289,36 +290,38 @@ export default function Agenda() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
              <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
-                  <div className="p-2 bg-emerald-600 rounded-2xl shadow-emerald-200 shadow-lg text-white"><CalendarIcon size={20} /></div>
+                  <div className="p-2 bg-blue-600 rounded-2xl shadow-blue-200 shadow-lg text-white"><CalendarIcon size={20} /></div>
                   Agenda
                 </h1>
              </div>
              
-             {/* Filtro de Médicos */}
-             <div className="flex items-center bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm w-full sm:w-auto">
-                <div className="px-3 text-slate-400"><Filter size={18} /></div>
-                <select 
-                    value={medicoFiltro} 
-                    onChange={(e) => setMedicoFiltro(e.target.value)}
-                    className="bg-transparent outline-none text-slate-700 text-sm font-bold w-full sm:w-64 py-2"
-                >
-                    <option value="">Todos os Médicos</option>
-                    {medicos.map(medico => (
-                        <option key={medico.id} value={medico.id}>{medico.nome}</option>
-                    ))}
-                </select>
-                {medicoFiltro && (
-                    <button onClick={() => setMedicoFiltro('')} className="px-2 text-slate-400 hover:text-red-500">
-                        <span className="text-xs font-bold">Limpar</span>
-                    </button>
-                )}
-             </div>
+             {/* Filtro de Médicos (Oculto se for Médico logado) */}
+             {!isMedico && (
+               <div className="flex items-center bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm w-full sm:w-auto">
+                  <div className="px-3 text-slate-400"><Filter size={18} /></div>
+                  <select 
+                      value={medicoFiltro} 
+                      onChange={(e) => setMedicoFiltro(e.target.value)}
+                      className="bg-transparent outline-none text-slate-700 text-sm font-bold w-full sm:w-64 py-2"
+                  >
+                      <option value="">Todos os Médicos</option>
+                      {medicos.map(medico => (
+                          <option key={medico.id} value={medico.id}>{medico.nome}</option>
+                      ))}
+                  </select>
+                  {medicoFiltro && (
+                      <button onClick={() => setMedicoFiltro('')} className="px-2 text-slate-400 hover:text-red-500">
+                          <span className="text-xs font-bold">Limpar</span>
+                      </button>
+                  )}
+               </div>
+             )}
 
              <div className="hidden md:flex bg-slate-200 p-1 rounded-xl">
                 <button onClick={() => setViewMode('calendar')} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${viewMode === 'calendar' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                    <CalendarIcon size={16} /> Calendário
                 </button>
-                <button onClick={() => setViewMode('kanban')} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${viewMode === 'kanban' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                <button onClick={() => setViewMode('kanban')} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${viewMode === 'kanban' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                    <Columns size={16} /> Fluxo (Kanban)
                 </button>
              </div>
@@ -333,7 +336,7 @@ export default function Agenda() {
                {medicosDoDiaSelecionado.length > 0 ? (
                    medicosDoDiaSelecionado.map(med => (
                        <div key={med.id} className="bg-white border border-slate-200 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
-                           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                           <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
                            {/* AQUI ESTAVA O PROBLEMA: REMOVI O .split(' ')[0] */}
                            <span className="text-xs font-bold text-slate-700">{med.nome}</span>
                            <span className="text-[10px] text-slate-400 uppercase font-medium">{med.especialidade}</span>
@@ -348,14 +351,14 @@ export default function Agenda() {
             <button onClick={() => setMobileListOpen(!mobileListOpen)} className="lg:hidden flex-1 bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
               {mobileListOpen ? 'Ver Calendário' : 'Ver Lista'}
             </button>
-            <button onClick={() => { setDadosModal({ data: format(new Date(), 'yyyy-MM-dd'), hora: format(new Date(), 'HH:mm'), pacienteId: '', medicoId: medicoFiltro || '', status: 'agendado' }); setModalOpen(true); }} className="flex-1 sm:flex-none bg-emerald-600 text-white text-sm sm:text-base py-3 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all active:scale-95">
-              <Plus size={20}/> <span className="hidden sm:inline">Novo Agendamento</span><span className="sm:hidden">Novo</span>
+            <button onClick={() => { setDadosModal({ data: format(new Date(), 'yyyy-MM-dd'), hora: format(new Date(), 'HH:mm'), pacienteId: '', medicoId: medicoFiltro || '', status: 'agendado' }); setModalOpen(true); }} className="flex-1 sm:flex-none bg-blue-600 text-white text-sm sm:text-base py-3 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95">
+              <Plus size={20}/> <span className="hidden sm:inline">{isMedico ? 'Novo Horário' : 'Novo Agendamento'}</span><span className="sm:hidden">Novo</span>
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="animate-spin text-emerald-600" size={48}/></div>
+          <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="animate-spin text-blue-600" size={48}/></div>
         ) : (
           <>
             {window.innerWidth < 1024 && mobileListOpen && (
@@ -394,7 +397,7 @@ export default function Agenda() {
         )}
       </div>
 
-      <button onClick={() => { setDadosModal({ data: format(new Date(), 'yyyy-MM-dd'), hora: format(new Date(), 'HH:mm'), pacienteId: '', medicoId: medicoFiltro || '', status: 'agendado' }); setModalOpen(true); }} className="fixed bottom-6 right-6 z-50 p-4 bg-emerald-600 text-white rounded-full shadow-2xl active:scale-90 transition-transform lg:hidden">
+      <button onClick={() => { setDadosModal({ data: format(new Date(), 'yyyy-MM-dd'), hora: format(new Date(), 'HH:mm'), pacienteId: '', medicoId: medicoFiltro || '', status: 'agendado' }); setModalOpen(true); }} className="fixed bottom-6 right-6 z-50 p-4 bg-blue-600 text-white rounded-full shadow-2xl active:scale-90 transition-transform lg:hidden">
         <Plus size={24} />
       </button>
 

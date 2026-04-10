@@ -144,14 +144,14 @@ export default function Medicos() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-              <div className="p-2 bg-emerald-600 rounded-lg text-white">
+              <div className="p-2 bg-blue-600 rounded-lg text-white">
                 <Stethoscope size={24} />
               </div>
               Corpo Clínico
             </h1>
             <p className="text-slate-500 mt-1 ml-12">Gerencie os médicos e seus dias de atendimento.</p>
           </div>
-          <button onClick={() => abrirModal()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 transition-all">
+          <button onClick={() => abrirModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all">
             <Plus size={20} /> Novo Médico
           </button>
         </div>
@@ -169,24 +169,24 @@ export default function Medicos() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-600" size={40}/></div>
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-blue-600" size={40}/></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {medicosFiltrados.map(medico => (
               <div key={medico.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group relative overflow-hidden flex flex-col">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 font-bold text-lg border border-emerald-100">
+                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg border border-blue-100">
                     {medico.nome.substring(0,2).toUpperCase()}
                   </div>
                   <div className="flex gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => abrirModal(medico)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-emerald-600 transition-colors" title="Editar"><Edit2 size={16}/></button>
+                    <button onClick={() => abrirModal(medico)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-blue-600 transition-colors" title="Editar"><Edit2 size={16}/></button>
                     <button onClick={() => handleExcluir(medico.id)} className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors" title="Excluir"><Trash2 size={16}/></button>
                   </div>
                 </div>
                 
                 <h3 className="font-bold text-lg text-slate-800 mb-0.5">{medico.nome}</h3>
-                <p className="text-emerald-600 font-bold text-sm mb-3 flex items-center gap-1">
-                   <Stethoscope size={14} className="text-emerald-400"/> {medico.especialidade}
+                <p className="text-blue-600 font-bold text-sm mb-3 flex items-center gap-1">
+                   <Stethoscope size={14} className="text-blue-400"/> {medico.especialidade}
                 </p>
 
                 {/* Exibição dos Dias de Atendimento no Card */}
@@ -237,19 +237,19 @@ export default function Medicos() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Nome Completo</label>
-                  <input required type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white font-medium" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} placeholder="Ex: Dr. João Silva" />
+                  <input required type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white font-medium" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} placeholder="Ex: Dr. João Silva" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Especialidade</label>
                   <div className="relative">
                     <Stethoscope size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input required type="text" className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.especialidade} onChange={e => setFormData({...formData, especialidade: e.target.value})} placeholder="Ex: Cardiologista" />
+                    <input required type="text" className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.especialidade} onChange={e => setFormData({...formData, especialidade: e.target.value})} placeholder="Ex: Cardiologista" />
                   </div>
                 </div>
 
                 {/* SELEÇÃO DE DIAS DE ATENDIMENTO */}
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <label className="block text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <label className="block text-xs font-bold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <CalendarCheck size={16}/> Dias de Atendimento
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -262,8 +262,8 @@ export default function Medicos() {
                                     onClick={() => toggleDia(dia.id)}
                                     className={`px-3 py-2 rounded-lg text-sm font-bold transition-all border ${
                                         selecionado 
-                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-200' 
-                                        : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' 
+                                        : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'
                                     }`}
                                 >
                                     {dia.nome}
@@ -277,18 +277,18 @@ export default function Medicos() {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">CRM</label>
-                        <input type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.crm} onChange={e => setFormData({...formData, crm: e.target.value})} placeholder="12345/SP" />
+                        <input type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.crm} onChange={e => setFormData({...formData, crm: e.target.value})} placeholder="12345/SP" />
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Telefone</label>
                         <div className="relative">
                              <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                             <input type="text" className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.telefone} onChange={handleChangeTelefone} placeholder="(00) 00000-0000" maxLength={15} />
+                             <input type="text" className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.telefone} onChange={handleChangeTelefone} placeholder="(00) 00000-0000" maxLength={15} />
                         </div>
                     </div>
                 </div>
                 <div className="pt-2">
-                    <button disabled={salvando} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-all flex justify-center items-center gap-2 mt-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100">
+                    <button disabled={salvando} type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all flex justify-center items-center gap-2 mt-2 active:scale-95 disabled:opacity-70 disabled:active:scale-100">
                         {salvando ? <Loader2 className="animate-spin" size={20}/> : <Save size={20}/>} 
                         {formData.id ? 'Salvar Alterações' : 'Cadastrar Médico'}
                     </button>

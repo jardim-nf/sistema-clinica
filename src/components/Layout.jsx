@@ -3,12 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; 
 import { 
     LayoutDashboard, Calendar, Users, FileText, Settings, LogOut, BarChart, Menu, X, DollarSign,
-    Building, Gavel, Loader2, Stethoscope 
+    Building, Gavel, Loader2, Stethoscope, MessageSquare 
 } from 'lucide-react'; 
+import SystemLogo from '../assets/logo.jpeg';
 
 const SidebarItem = ({ icon: Icon, text, to, active, onClick }) => {
-    // MUDANÇA: Verde (emerald-600) quando ativo
-    const activeClasses = 'bg-emerald-600 text-white shadow-md';
+    // MUDANÇA: Verde (blue-600) quando ativo
+    const activeClasses = 'bg-blue-600 text-white shadow-md';
     const inactiveClasses = 'text-slate-600 hover:bg-slate-100 hover:text-slate-800';
 
     return (
@@ -25,10 +26,10 @@ const SidebarItem = ({ icon: Icon, text, to, active, onClick }) => {
 
 const GlobalLoadingScreen = () => (
     // MUDANÇA: Texto verde
-    <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center text-emerald-600">
+    <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center text-blue-600">
         <Loader2 size={48} className="animate-spin mb-4" />
-        {/* MUDANÇA: Nome Sanus */}
-        <h1 className="text-2xl font-extrabold text-slate-800">Sanus</h1>
+        {/* MUDANÇA: Nome IdeaSaúde */}
+        <h1 className="text-2xl font-extrabold text-slate-800">IdeaSaúde</h1>
         <p className="text-sm text-slate-500 mt-2">Carregando Sistema...</p>
     </div>
 );
@@ -40,14 +41,15 @@ export default function Layout({ children }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const allMenuItems = [
-        { icon: LayoutDashboard, text: 'Dashboard', path: '/', roles: ['admin', 'secretaria', 'super_admin'] },
-        { icon: Calendar, text: 'Agenda', path: '/agenda', roles: ['admin', 'secretaria'] },
-        { icon: Users, text: 'Pacientes', path: '/pacientes', roles: ['admin', 'secretaria'] },
+        { icon: LayoutDashboard, text: 'Dashboard', path: '/', roles: ['admin', 'secretaria', 'super_admin', 'medico'] },
+        { icon: Calendar, text: 'Agenda', path: '/agenda', roles: ['admin', 'secretaria', 'medico'] },
+        { icon: Users, text: 'Pacientes', path: '/pacientes', roles: ['admin', 'secretaria', 'medico'] },
         { icon: Stethoscope, text: 'Corpo Clínico', path: '/medicos', roles: ['admin', 'secretaria'] }, 
-        { icon: FileText, text: 'Prontuários', path: '/prontuarios', roles: ['admin'] }, 
+        { icon: FileText, text: 'Prontuários', path: '/prontuarios', roles: ['admin', 'medico'] }, 
         { icon: DollarSign, text: 'Financeiro', path: '/financeiro', roles: ['admin'] },
         { icon: BarChart, text: 'Relatórios', path: '/relatorios', roles: ['admin'] },
         { icon: Settings, text: 'Configurações', path: '/config', roles: ['admin'] },
+        { icon: MessageSquare, text: 'WhatsApp', path: '/whatsapp', roles: ['admin', 'super_admin'] },
         { icon: Building, text: 'Gestão de Clínicas', path: '/super/clinicas', roles: ['super_admin'] },
         { icon: DollarSign, text: 'Financeiro Geral', path: '/super/financeiro', roles: ['super_admin'] },
         { icon: BarChart, text: 'Relatórios Societários', path: '/super/relatorios', roles: ['super_admin'] },
@@ -64,7 +66,8 @@ export default function Layout({ children }) {
 
     const getRoleDisplayName = (role) => {
         switch (role) {
-            case 'admin': return 'Médico Admin';
+            case 'admin': return 'Gestão (Admin)';
+            case 'medico': return 'Médico';
             case 'secretaria': return 'Secretária';
             case 'super_admin': return 'Administrador Geral';
             default: return 'Usuário';
@@ -79,9 +82,10 @@ export default function Layout({ children }) {
 
             <aside className={`fixed top-0 left-0 z-30 h-full w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
                 <div className="p-6 h-16 flex items-center justify-between border-b border-slate-100">
-                    {/* MUDANÇA: Logo e Texto Verde */}
-                    <h1 className="text-xl font-extrabold text-emerald-600 flex items-center gap-2">
-                        <span className="bg-emerald-600 text-white px-2 py-0.5 rounded text-sm font-bold">SN</span> Sanus
+                    {/* MUDANÇA: Logo e Texto Azul */}
+                    <h1 className="text-xl font-extrabold text-blue-600 flex items-center gap-2">
+                        <img src={userData?.logo || SystemLogo} alt="Logo" className="w-8 h-8 object-cover rounded-md shadow-sm" />
+                        <span className="truncate">IdeaSaúde</span>
                     </h1>
                     <button onClick={() => setMobileMenuOpen(false)} className="md:hidden text-slate-400"><X size={24}/></button>
                 </div>
@@ -121,8 +125,8 @@ export default function Layout({ children }) {
                         <h2 className="text-xl font-extrabold text-slate-800">{currentTitle}</h2>
                     </div>
                     <div className="flex items-center gap-4">
-                        {/* MUDANÇA: Avatar Verde */}
-                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold border border-emerald-200 text-sm md:text-base">SN</div>
+                        {/* MUDANÇA: Avatar Azul */}
+                        <img src={userData?.logo || SystemLogo} alt="User Avatar" className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover border border-blue-200 shadow-sm" />
                     </div>
                 </header>
                 <main className="p-4 md:p-8 flex-1 overflow-auto overflow-x-hidden">

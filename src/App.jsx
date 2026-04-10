@@ -17,6 +17,7 @@ import Agenda from './pages/Agenda';
 import Pacientes from './pages/Pacientes';
 import Prontuario from './pages/Prontuario';
 import Configuracoes from './pages/Configuracoes';
+import ConfiguracoesWhatsapp from './pages/ConfiguracoesWhatsapp';
 import Relatorios from './pages/Relatorios'; 
 import Financeiro from './pages/Financeiro';
 import Medicos from './pages/Medicos'; // <--- IMPORTAÇÃO QUE FALTAVA
@@ -30,18 +31,26 @@ import ControleMaster from './pages/Admin/ControleMaster';
 
 // Componente que protege as rotas privadas
 const RotaPrivada = ({ children }) => {
-    const { user, loading } = useAuth();
-    
-    if (loading) return null; 
+    const { user } = useAuth();
     
     return user ? children : <Navigate to="/login" replace />;
 };
 
 // Componente para gerenciar as rotas internas
 const RotasInternas = () => {
-    const { userData } = useAuth();
+    const { user, userData } = useAuth();
     
-    if (!userData) return <Navigate to="/login" replace />; 
+    // Se temos o user do auth mas ainda estamos buscando os dados do firestore (userData), aguarde
+    if (user && !userData) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center text-blue-600 bg-slate-50 gap-4">
+                <div className="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+                <p className="font-semibold">Preparando ambiente...</p>
+            </div>
+        );
+    }
+    
+    if (!userData) return <Navigate to="/login" replace />;
 
     return (
         <Layout> 
@@ -59,6 +68,7 @@ const RotasInternas = () => {
                 <Route path="/prontuarios" element={<Prontuario />} />
                 <Route path="/relatorios" element={<Relatorios />} />
                 <Route path="/config" element={<Configuracoes />} />
+                <Route path="/whatsapp" element={<ConfiguracoesWhatsapp />} />
                 <Route path="/financeiro" element={<Financeiro />} />
                 
                 {/* ROTA DE MÉDICOS (Corrigida: sem wrapper redundante) */}

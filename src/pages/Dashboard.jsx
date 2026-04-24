@@ -6,7 +6,8 @@ import {
   Users, Calendar, DollarSign, Clock, 
   TrendingUp, Activity, Loader2, 
   ArrowUpRight, ArrowDownRight, 
-  UserCheck, Stethoscope, ChevronRight, TrendingUp as TrendingUpIcon
+  UserCheck, Stethoscope, ChevronRight, TrendingUp as TrendingUpIcon,
+  Link as LinkIcon, CheckCircle
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, 
@@ -52,6 +53,15 @@ export default function Dashboard() {
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
   
   const idUsuario = user?.uid;
+
+  const [copiedLink, setCopiedLink] = useState(false);
+  const handleCopyLink = () => {
+    const clinicaIdUrl = userData?.clinicaId || userData?.donoId || idUsuario;
+    const link = `${window.location.origin}/agendar/${clinicaIdUrl}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
 
   useEffect(() => {
     if (!idUsuario) return;
@@ -153,20 +163,31 @@ export default function Dashboard() {
         <div className="mb-8 md:mb-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-4 mb-4">
-                {/* MUDANÇA: Ícone e Gradiente Verde */}
-                <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/20">
-                  <Stethoscope size={24} className="text-white" />
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-4">
+                  {/* MUDANÇA: Ícone e Gradiente Verde */}
+                  <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/20">
+                    <Stethoscope size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight">
+                      {/* MUDANÇA: Texto de destaque verde */}
+                      {greeting}, <span className="text-blue-600">{userData?.nome?.split(' ')[0]}</span>
+                    </h1>
+                    <p className="text-slate-500 mt-2">
+                      Resumo completo da <span className="font-semibold text-slate-700">{userData?.nomeClinica || "sua clínica"}</span>
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight">
-                    {/* MUDANÇA: Texto de destaque verde */}
-                    {greeting}, <span className="text-blue-600">{userData?.nome?.split(' ')[0]}</span>
-                  </h1>
-                  <p className="text-slate-500 mt-2">
-                    Resumo completo da <span className="font-semibold text-slate-700">{userData?.nomeClinica || "sua clínica"}</span>
-                  </p>
-                </div>
+
+                {/* Botão de Link Público */}
+                <button 
+                  onClick={handleCopyLink}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 rounded-xl font-bold text-sm transition-all border border-blue-200 shadow-sm"
+                >
+                  {copiedLink ? <CheckCircle size={18} className="text-green-600" /> : <LinkIcon size={18} />}
+                  {copiedLink ? 'Link Copiado!' : 'Link de Agendamento'}
+                </button>
               </div>
               
               {/* Quick Stats Grid */}

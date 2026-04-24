@@ -205,7 +205,7 @@ export default function Medicos() {
                 <div className="mt-auto pt-3 border-t border-slate-50 space-y-2">
                     {medico.crm && (
                         <p className="text-slate-500 text-xs font-medium bg-slate-100 inline-block px-2 py-1 rounded">
-                            CRM: {medico.crm}
+                            Registro: {medico.crm}
                         </p>
                     )}
                     {medico.telefone && (
@@ -276,8 +276,8 @@ export default function Medicos() {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">CRM</label>
-                        <input type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.crm} onChange={e => setFormData({...formData, crm: e.target.value})} placeholder="12345/SP" />
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Registro Profissional</label>
+                        <input type="text" className="w-full p-3.5 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all bg-slate-50 focus:bg-white" value={formData.crm} onChange={e => setFormData({...formData, crm: e.target.value})} placeholder="12345/SP ou CRN/CRO" />
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Telefone</label>

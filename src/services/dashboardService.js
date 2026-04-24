@@ -45,13 +45,16 @@ export const dashboardService = {
       snapAgendamentos.forEach(doc => {
         const data = doc.data();
         
-        // Tratamento de Data (Timestamp ou String ISO)
-        let dataConsulta;
+        // Tratamento Seguro de Data
+        let dataConsulta = new Date(0);
         if (data.start?.toDate) {
              dataConsulta = data.start.toDate(); 
         } else if (data.start) {
              dataConsulta = new Date(data.start);
+        } else if (data.data && data.hora) {
+             dataConsulta = new Date(`${data.data}T${data.hora}:00`);
         }
+        if (isNaN(dataConsulta.getTime())) dataConsulta = new Date(0);
 
         // Consultas de Hoje
         if (dataConsulta && dataConsulta >= hojeInicio && dataConsulta <= hojeFim) {
@@ -120,9 +123,11 @@ export const dashboardService = {
 
       snapshot.forEach(doc => {
         const data = doc.data();
-        let dataConsulta;
+        let dataConsulta = new Date(0);
         if (data.start?.toDate) dataConsulta = data.start.toDate();
-        else dataConsulta = new Date(data.start);
+        else if (data.start) dataConsulta = new Date(data.start);
+        else if (data.data && data.hora) dataConsulta = new Date(`${data.data}T${data.hora}:00`);
+        if (isNaN(dataConsulta.getTime())) dataConsulta = new Date(0);
 
         // Filtra apenas os últimos 6 meses no Javascript
         if (dataConsulta >= seisMesesAtras) {
@@ -164,16 +169,18 @@ export const dashboardService = {
       const lista = snapshot.docs
         .map(doc => {
           const data = doc.data();
-          let dataObj;
+          let dataObj = new Date(0);
           if (data.start?.toDate) dataObj = data.start.toDate();
-          else dataObj = new Date(data.start);
+          else if (data.start) dataObj = new Date(data.start);
+          else if (data.data && data.hora) dataObj = new Date(`${data.data}T${data.hora}:00`);
+          if (isNaN(dataObj.getTime())) dataObj = new Date(0);
 
           return {
             id: doc.id,
             paciente: data.pacienteNome || 'Paciente',
             data: dataObj,
             dataIso: dataObj.toISOString(),
-            hora: dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+            hora: dataObj.getTime() === 0 ? '--:--' : dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
             status: data.status,
             observacoes: data.observacoes
           };

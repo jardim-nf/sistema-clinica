@@ -28,5 +28,21 @@ export const clinicaService = {
         ...dados,
         updatedAt: new Date()
     });
+  },
+
+  // Busca dados públicos da clínica para o agendamento online
+  getClinicaById: async (userId) => {
+    try {
+        const userRef = doc(db, "usuarios", userId);
+        const { getDoc } = await import('firebase/firestore');
+        const snapshot = await getDoc(userRef);
+        if (snapshot.exists()) {
+            return { id: snapshot.id, ...snapshot.data() };
+        }
+        return null;
+    } catch (error) {
+        console.error("Erro ao buscar dados da clínica:", error);
+        return null;
+    }
   }
 };

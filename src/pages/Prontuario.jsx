@@ -17,7 +17,7 @@ import { checklists } from '../utils/checklists';
 import { 
   Clock, Pill, FileBadge, FileCheck, Save, X,
   Stethoscope, ChevronRight, Download, ClipboardList, Search,
-  Menu, X as XIcon
+  Menu, X as XIcon, Mic, Square
 } from 'lucide-react';
 
 export default function ProntuarioAvancado() {
@@ -43,6 +43,104 @@ export default function ProntuarioAvancado() {
   
   const [formEvolucao, setFormEvolucao] = useState({ titulo: '', conteudo: '', tags: [] });
   const [documentos, setDocumentos] = useState({ receita: '', atestado: '', declaracao: '' });
+
+  // AI Scribe State
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const abaAtivaRef = React.useRef(abaAtiva);
+
+  useEffect(() => {
+    abaAtivaRef.current = abaAtiva;
+  }, [abaAtiva]);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recog = new SpeechRecognition();
+      recog.continuous = true;
+      recog.interimResults = true;
+      recog.lang = 'pt-BR';
+
+      recog.onstart = () => {
+        setIsRecording(true);
+        setLiveTranscript('');
+      };
+
+      recog.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        
+        setLiveTranscript(interimTranscript);
+
+        if (finalTranscript) {
+          const currentAba = abaAtivaRef.current;
+          
+          const appendText = (currentHtml, newText) => {
+            if (!currentHtml) return `<p>${newText}</p>`;
+            // Remove trailing </p> if exists to insert text inside the same paragraph
+            if (currentHtml.trim().endsWith('</p>')) {
+              return currentHtml.trim().slice(0, -4) + ' ' + newText + '</p>';
+            }
+            return currentHtml + ' ' + newText;
+          };
+
+          if (currentAba === 'evolucao') {
+            setFormEvolucao(prev => ({ 
+                ...prev, 
+                conteudo: appendText(prev.conteudo, finalTranscript) 
+            }));
+          } else {
+            setDocumentos(prev => ({ 
+                ...prev, 
+                [currentAba]: appendText(prev[currentAba], finalTranscript) 
+            }));
+          }
+        }
+      };
+
+      recog.onerror = (event) => {
+        setIsRecording(false);
+        setLiveTranscript('');
+        console.error("Erro no reconhecimento de voz", event.error);
+        if (event.error === 'network') {
+            showToast("Erro de rede. O Chrome precisa de internet para transcrever a voz.", "error");
+        } else if (event.error === 'not-allowed') {
+            showToast("Permissão de microfone negada.", "error");
+        } else {
+            showToast(`Erro no microfone: ${event.error}`, "error");
+        }
+      };
+
+      recog.onend = () => {
+        setIsRecording(false);
+        setLiveTranscript('');
+      };
+
+      setRecognition(recog);
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (!recognition) {
+        showToast("Seu navegador não suporta reconhecimento de voz. Use o Chrome.", "warning");
+        return;
+    }
+    if (isRecording) {
+        recognition.stop();
+    } else {
+        recognition.start();
+        showToast("Escutando... Fale normalmente", "success");
+    }
+  };
 
   const clinicaId = userData?.clinicaId || userData?.donoId || "";
   const meuUsuarioId = userData?.uid || userData?.id || "";
@@ -319,6 +417,33 @@ export default function ProntuarioAvancado() {
                             onChange={e => setFormEvolucao({...formEvolucao, titulo: e.target.value})} 
                           />
                         )}
+
+                        {/* Toolbar do AI Scribe */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-blue-100 text-blue-600'}`}>
+                                    <Mic size={24} />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-slate-700 text-sm lg:text-base">AI Scribe (Prontuário por Voz)</h4>
+                                    <p className="text-xs text-slate-500 max-w-sm truncate">
+                                        {isRecording 
+                                            ? (liveTranscript ? `Ouvindo: "${liveTranscript}"` : 'Ouvindo a consulta... (Fale normalmente)') 
+                                            : 'Aperte para transcrever sua fala para o prontuário'}
+                                    </p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={toggleRecording}
+                                className={`w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${isRecording ? 'bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-200' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-md'}`}
+                            >
+                                {isRecording ? (
+                                    <><Square size={18} fill="currentColor" /> Parar Escuta</>
+                                ) : (
+                                    <><Mic size={18} /> Iniciar Escuta</>
+                                )}
+                            </button>
+                        </div>
                         
                         <div className="min-h-[400px] lg:min-h-[500px]">
                           <ReactQuill 

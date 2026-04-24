@@ -46,8 +46,9 @@ function getSystemPrompt() {
 1. Não ofereça sábados ou domingos.
 2. Não atenda emergências médicas.
 3. Não fale sobre medicações ou dê diagnósticos médicos.
-4. Se o paciente disser palavras como "falar com pessoa", "humano", "atendente", retorne apenas a palavra exata [ESCALAR_HUMANO].
-5. Respostas curtas, fáceis de ler, e simpáticas via WhatsApp. Max 2 parágrafos. Emojis com moderação.`;
+4. Se o paciente responder a um lembrete confirmando (ex: "1", "sim", "confirmo") ou cancelando (ex: "2", "não", "cancelar"), use a ferramenta "confirmar_ou_cancelar_consulta" para atualizar o status.
+5. Se o paciente disser palavras como "falar com pessoa", "humano", "atendente", retorne apenas a palavra exata [ESCALAR_HUMANO].
+6. Respostas curtas, fáceis de ler, e simpáticas via WhatsApp. Max 2 parágrafos. Emojis com moderação.`;
 }
 
 // Definição das Ferramentas
@@ -80,6 +81,20 @@ const tools = [
                     especialidade: { type: "string", description: "A especialidade do médico (ex: Clinico, Pediatria)" }
                 },
                 required: ["data", "hora", "nomePaciente", "especialidade"]
+            }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "confirmar_ou_cancelar_consulta",
+            description: "Atualiza o status de uma consulta existente do paciente (buscada pelo número de WhatsApp) para CONFIRMADO ou CANCELADO. Use quando o paciente responder a um lembrete confirmando ou cancelando.",
+            parameters: {
+                type: "object",
+                properties: {
+                    acao: { type: "string", enum: ["confirmado", "cancelado"], description: "A ação escolhida pelo paciente." }
+                },
+                required: ["acao"]
             }
         }
     }
@@ -135,6 +150,36 @@ async function executeTool(name, args, phone) {
             return JSON.stringify({ sucesso: true, avisoAoBot: "A consulta foi gravada com segurança no banco. Confirme com o paciente!" });
         } catch (e) {
             return JSON.stringify({ erro: "Erro de permissão no banco ao agendar." });
+        }
+    }
+
+    if (name === 'confirmar_ou_cancelar_consulta') {
+        try {
+            // Busca a consulta mais recente do paciente que ainda está pendente ou agendada
+            const snapshot = await db.collection('agendamentos')
+                .where('telefone', '==', phone)
+                .where('status', 'in', ['agendado', 'pendente'])
+                .get();
+
+            if (snapshot.empty) {
+                return JSON.stringify({ erro: "Não encontrei nenhuma consulta agendada para confirmar ou cancelar neste número." });
+            }
+
+            // Pega a mais próxima caso haja mais de uma
+            let consultas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            consultas.sort((a, b) => new Date(`${a.data}T${a.hora || '00:00'}`) - new Date(`${b.data}T${b.hora || '00:00'}`));
+            
+            const consultaAlvo = consultas[0];
+            
+            await db.collection('agendamentos').doc(consultaAlvo.id).update({
+                status: args.acao,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            return JSON.stringify({ sucesso: true, avisoAoBot: `A consulta foi marcada como ${args.acao}. Agradeça/informe ao paciente.` });
+        } catch (e) {
+            console.error("Erro na ferramenta confirmar_ou_cancelar_consulta:", e);
+            return JSON.stringify({ erro: "Erro ao atualizar consulta no banco." });
         }
     }
 

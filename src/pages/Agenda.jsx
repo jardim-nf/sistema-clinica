@@ -43,7 +43,7 @@ export default function Agenda() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const isMedico = userData?.role === 'medico';
-  const [medicoFiltro, setMedicoFiltro] = useState(isMedico ? (userData.medicoId || '') : '');
+  const [medicoFiltro, setMedicoFiltro] = useState(isMedico ? (userData?.medicoId || '') : '');
 
   const idDaClinica = userData?.clinicaId || userData?.id;
 
@@ -102,23 +102,33 @@ export default function Agenda() {
   }, [eventos, medicoFiltro]);
 
   const eventosDoDia = eventosFiltrados.filter(evento => {
-    const dataEvento = format(parseISO(evento.start), 'yyyy-MM-dd');
-    const dataSelecionada = format(selectedDate, 'yyyy-MM-dd');
-    return dataEvento === dataSelecionada;
+    if (!evento.start || !selectedDate) return false;
+    try {
+      const dataEvento = format(parseISO(evento.start), 'yyyy-MM-dd');
+      const dataSelecionada = format(selectedDate, 'yyyy-MM-dd');
+      return dataEvento === dataSelecionada;
+    } catch (err) {
+      return false;
+    }
   });
 
   // --- PLANTÃO (QUEM TRABALHA HOJE) ---
   const medicosDoDiaSelecionado = useMemo(() => {
-     const dataString = format(selectedDate, 'yyyy-MM-dd');
-     const dataSegura = new Date(`${dataString}T12:00:00`);
-     const diaSemana = dataSegura.getDay(); 
-
-     return medicos.filter(m => {
-        if (!m.diasAtendimento || !Array.isArray(m.diasAtendimento) || m.diasAtendimento.length === 0) {
-            return true;
-        }
-        return m.diasAtendimento.includes(diaSemana);
-     });
+     if (!selectedDate) return [];
+     try {
+       const dataString = format(selectedDate, 'yyyy-MM-dd');
+       const dataSegura = new Date(`${dataString}T12:00:00`);
+       const diaSemana = dataSegura.getDay(); 
+       
+       return medicos.filter(m => {
+          if (!m.diasAtendimento || !Array.isArray(m.diasAtendimento) || m.diasAtendimento.length === 0) {
+              return true;
+          }
+          return m.diasAtendimento.includes(diaSemana);
+       });
+     } catch (err) {
+       return [];
+     }
   }, [medicos, selectedDate]);
 
   // --- VALIDAÇÕES ---
@@ -255,11 +265,11 @@ export default function Agenda() {
     return eventosDoDia.map(evt => ({
       id: evt.id,
       pacienteNome: evt.title,
-      medicoNome: evt.extendedProps.medicoNome,
-      hora: format(parseISO(evt.start), 'HH:mm'),
-      status: evt.extendedProps.status || 'agendado',
-      tipo: evt.extendedProps.tipo,
-      valor: evt.extendedProps.valor
+      medicoNome: evt.extendedProps?.medicoNome || 'Sem Médico',
+      hora: evt.start ? format(parseISO(evt.start), 'HH:mm') : '00:00',
+      status: evt.extendedProps?.status || 'agendado',
+      tipo: evt.extendedProps?.tipo,
+      valor: evt.extendedProps?.valor
     }));
   }, [eventosDoDia]);
 

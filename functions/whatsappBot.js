@@ -20,11 +20,12 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 async function sendText(phone, message) {
     if (!UAZAPI_URL || !UAZAPI_TOKEN) return;
     try {
-        await axios.post(
+        const resp = await axios.post(
             `${UAZAPI_URL}/send/text`,
-            { phone: phone, message: message },
+            { number: phone, text: message },
             { headers: { 'Content-Type': 'application/json', 'token': UAZAPI_TOKEN } }
         );
+        console.log('✅ Mensagem enviada com sucesso para', phone);
     } catch (e) {
         console.error('Erro ao enviar mensagem Uazapi:', e.response?.data || e.message);
     }
@@ -195,39 +196,106 @@ exports.handleWebhookPost = async (req, res) => {
     res.json({ status: 'ok' }); // Retorno rápido para a Uazapi
     
     try {
-        console.log('--- PAYLOAD RECEBIDO DA UAZAPI ---', JSON.stringify(req.body));
+        console.log('📥 PAYLOAD COMPLETO:', JSON.stringify(req.body));
+        console.log('📥 CHAVES DO BODY:', Object.keys(req.body));
         const body = req.body;
-        const isUazapi = body?.EventType === 'messages';
-        
-        let fromMe = false;
-        let isGroup = false;
-        let from = '';
-        let pushName = 'Paciente';
-        let text = '';
 
-        if (isUazapi) {
-            const msg = body.message || {};
-            fromMe = msg.fromMe;
-            isGroup = msg.isGroup || (msg.chatid && msg.chatid.includes('@g.us'));
-            from = (msg.chatid || '').replace('@s.whatsapp.net', '');
-            pushName = body.chat?.wa_contactName || body.chat?.name || 'Paciente';
-            text = msg.text || '';
-        } else {
-            const key = body?.key || body?.data?.key || {};
-            const messageData = body?.message || body?.data?.message || {};
-            fromMe = key.fromMe;
-            isGroup = (key.remoteJid || '').includes('@g.us');
-            from = (key.remoteJid || '').replace('@s.whatsapp.net', '');
-            pushName = body.pushName || body.data?.pushName || 'Paciente';
-            text = messageData.conversation
-                || messageData.extendedTextMessage?.text
-                || messageData.buttonsResponseMessage?.selectedButtonId
-                || messageData.listResponseMessage?.singleSelectReply?.selectedRowId
+        // ================================================================
+        // PARSER UNIVERSAL UAZAPI — 4 formatos (copiado do PontoCerto/MataFome)
+        // ================================================================
+        let telefone = '';
+        let text = '';
+        let fromMe = false;
+        let isAutoResponse = false;
+        let pushName = 'Paciente';
+
+        if (body.BaseUrl || body.EventType) {
+            // 🟢 FORMATO A — meunumero.uazapi.com (formato principal)
+            const msgArr = body.messages || (body.message ? [body.message] : []);
+            const msg = msgArr[0] || body.message || {};
+
+            telefone = msg?.key?.remoteJid
+                || msg?.remoteJid
+                || msg?.chatid
+                || body?.phone
+                || body?.sender
+                || body?.from
+                || body?.chat?.phone
+                || body?.chat?.wa_chatid
                 || '';
+
+            text = msg?.message?.conversation
+                || msg?.message?.extendedTextMessage?.text
+                || msg?.text || msg?.body
+                || body?.text || body?.body || body?.content || '';
+
+            fromMe = msg?.key?.fromMe ?? msg?.fromMe ?? body?.message?.fromMe ?? body?.fromMe ?? false;
+            isAutoResponse = (msg?.wasSentByApi === true || body?.message?.wasSentByApi === true);
+            pushName = body?.chat?.wa_contactName || body?.chat?.name || body?.pushName || msg?.senderName || 'Paciente';
+
+            console.log('📍 FORMATO A (BaseUrl/EventType) detectado');
+
+        } else if (body?.event === 'messages.upsert' || body?.data?.key) {
+            // 🟡 FORMATO B — evento messages.upsert com wrapper data
+            const msgData = body.data || {};
+
+            telefone = msgData?.key?.remoteJid || '';
+            text = msgData?.message?.conversation
+                || msgData?.message?.extendedTextMessage?.text || '';
+            fromMe = msgData?.key?.fromMe || false;
+            pushName = body?.pushName || body?.data?.pushName || 'Paciente';
+
+            console.log('📍 FORMATO B (data.key / messages.upsert) detectado');
+
+        } else if (body?.key?.remoteJid) {
+            // 🔵 FORMATO C — Baileys legado direto
+            telefone = body.key.remoteJid;
+            text = body?.message?.conversation
+                || body?.message?.extendedTextMessage?.text || '';
+            fromMe = body.key.fromMe || false;
+            pushName = body?.pushName || 'Paciente';
+
+            console.log('📍 FORMATO C (key.remoteJid legado) detectado');
+
+        } else {
+            // ⚪ FORMATO DESCONHECIDO — tenta extrair qualquer coisa
+            telefone = body?.from || body?.phone || body?.number || body?.sender || '';
+            text = body?.text || body?.message || body?.body || body?.msg || '';
+            fromMe = body?.fromMe === true;
+            pushName = body?.pushName || 'Paciente';
+
+            console.log('📍 FORMATO DESCONHECIDO — tentando fallback');
         }
 
-        if (fromMe || isGroup) return;
-        if (!text.trim()) return;
+        // Limpar telefone: remover @s.whatsapp.net, @c.us, @lid, e caracteres não numéricos
+        telefone = String(telefone).replace(/@[\w.]+/g, '').replace(/[^0-9]/g, '');
+        text = String(text || '').trim();
+        let from = telefone;
+
+        // Garantir formato do telefone para envio (com 55)
+        if (from && !from.startsWith('55')) {
+            from = `55${from}`;
+        }
+
+        // Ignorar grupos
+        const isGroup = String(body?.message?.chatid || body?.key?.remoteJid || '').includes('@g.us')
+            || body?.message?.isGroup === true
+            || body?.chat?.wa_isGroup === true;
+
+        console.log(`📊 PARSED: fromMe=${fromMe}, isAuto=${isAutoResponse}, telefone=${telefone}, texto="${text.substring(0, 50)}"`);
+
+        if (fromMe || isAutoResponse) {
+            console.log('⏭️ IGNORADO: fromMe ou autoResponse');
+            return;
+        }
+        if (isGroup) {
+            console.log('⏭️ IGNORADO: mensagem de grupo');
+            return;
+        }
+        if (!text) {
+            console.log('⏭️ IGNORADO: sem texto');
+            return;
+        }
 
         const sessionRef = db.collection('whatsapp_sessions').doc(from);
         const sessionSnap = await sessionRef.get();

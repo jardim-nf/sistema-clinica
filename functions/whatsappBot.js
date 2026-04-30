@@ -32,36 +32,53 @@ async function sendText(phone, message) {
 }
 
 // Prompt do ChatGPT
-function getSystemPrompt() {
+async function getSystemPrompt() {
     const hoje = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     
+    // Buscar médicos dinamicamente do Firestore
+    let quadroMedicos = "| Médico | Especialidade | Telefone | Dias de Atendimento |\n|---|---|---|---|\n";
+    try {
+        const snapshot = await db.collection('medicos').get();
+        const mapDias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            let diasStr = "Seg-Sex";
+            if (data.diasAtendimento && data.diasAtendimento.length > 0) {
+                diasStr = data.diasAtendimento.map(d => mapDias[d]).join(', ');
+            }
+            quadroMedicos += `| ${data.nome} | ${data.especialidade} | ${data.telefone || 'N/A'} | ${diasStr} |\n`;
+        });
+    } catch (e) {
+        console.error("Erro ao buscar médicos para o prompt:", e);
+        quadroMedicos += "| Erro | Erro | Erro | Erro |\n";
+    }
+
     return `Você é a assistente virtual da clínica IdeaSaúde. Seja extremamente educada, empática e prestativa. Hoje é: ${hoje}.
 
 ## Seu papel principal: Atuar como Secretária Completa
 - Pergunte qual a especialidade médica que o paciente procura.
 - Informe o médico responsável e o valor da consulta ANTES de agendar.
-- Pergunte por uma preferência de data e **use a ferramenta "obter_horarios_disponiveis"** para fornecer a ele opções reais de horários livres não agendados.
+- Pergunte por uma preferência de data e **use a ferramenta "obter_horarios_disponiveis"** para fornecer a ele opções reais de horários livres não agendados. (Lembre-se de checar na tabela abaixo se o médico atende no dia da semana solicitado).
 - Se o paciente escolher um horário, **use a ferramenta "agendar_consulta"** para concluir. Jamais confirme um agendamento para o usuário sem antes executar essa ferramenta com sucesso.
 - Peça o nome completo do paciente educadamente, se não possuir.
 
-## QUADRO DE MÉDICOS E VALORES
-| Médico | Especialidade | Valor |
-|---|---|---|
-| Hanna Neuro | Psicóloga | R$ 1.900,00 (pacote mínimo de 10 sessões) |
-| Dr. Andrea | Dermatologista | R$ 350,00 |
-| Dr. Erika | Clínica Geral | R$ 250,00 |
-| Yara | Nutricionista | R$ 190,00 |
-| Dr. Karen | Neurologista | R$ 350,00 |
-| Dr. Erikson | Alta Performance | R$ 500,00 |
-| Dr. Erikson | Endocrinologista | R$ 300,00 |
-| Dr. Lavínia | Clínica Geral | R$ 250,00 |
-| Daniel Guimarães | Angiologista | R$ 200,00 |
-| Mariana Leite | Neuropediatra | R$ 500,00 |
+## QUADRO DE MÉDICOS, ESPECIALIDADES E DIAS DE ATENDIMENTO (DO BANCO DE DADOS)
+${quadroMedicos}
+
+## TABELA DE PREÇOS (REFERÊNCIA)
+- Hanna Neuro (Psicóloga): R$ 1.900,00 (pacote mínimo de 10 sessões)
+- Dermatologista: R$ 350,00
+- Clínica Geral: R$ 250,00
+- Nutricionista: R$ 190,00
+- Neurologista / Neuropediatra: R$ 350,00 a R$ 500,00
+- Alta Performance: R$ 500,00
+- Endocrinologista: R$ 300,00
+- Angiologista: R$ 200,00
 
 **IMPORTANTE sobre Psicóloga (Hanna Neuro):** O valor de R$ 1.900,00 é um pacote fechado de no mínimo 10 sessões. Informe isso ao paciente antes de agendar.
 
 ## REGRAS DE ATENDIMENTO
-1. Não ofereça sábados ou domingos.
+1. Verifique os dias de atendimento do médico na tabela acima. Se o médico não atende no dia solicitado, não ofereça aquele dia.
 2. Não atenda emergências médicas.
 3. Não fale sobre medicações ou dê diagnósticos médicos.
 4. Sempre informe o nome do médico e o valor da consulta ao paciente antes de confirmar o agendamento.
@@ -76,11 +93,12 @@ const tools = [
         type: "function",
         function: {
             name: "obter_horarios_disponiveis",
-            description: "Consulta no sistema os horários vazios em uma data específica. Útil para dar opções reais ao paciente.",
+            description: "Consulta no sistema os horários vazios em uma data específica para um médico específico. Útil para dar opções reais ao paciente.",
             parameters: {
                 type: "object",
                 properties: {
-                    data: { type: "string", description: "Data da busca no formato AAAA-MM-DD. Ex: 2026-10-25" }
+                    data: { type: "string", description: "Data da busca no formato AAAA-MM-DD. Ex: 2026-10-25" },
+                    medico: { type: "string", description: "Nome do médico que o paciente quer consultar." }
                 },
                 required: ["data"]
             }
@@ -125,14 +143,38 @@ const tools = [
 async function executeTool(name, args, phone) {
     if (name === 'obter_horarios_disponiveis') {
         const dataBuscada = args.data; // AAAA-MM-DD
+        const medicoDesejado = args.medico || '';
         const dateObj = new Date(`${dataBuscada}T00:00:00-03:00`);
         
         if (isNaN(dateObj.getTime())) return JSON.stringify({ erro: "Data mal formatada." });
         const diaSemana = dateObj.getDay();
-        if (diaSemana === 0 || diaSemana === 6) {
-            return JSON.stringify({ 
-                erro: "Indisponível. A clínica só atende de Seg-Sex das 08:00 às 18:00. Peça ao paciente outro dia."
+
+        // Validar dia de atendimento do médico se informado
+        if (medicoDesejado) {
+            const medicosSnap = await db.collection('medicos').get();
+            let medicoEncontrado = null;
+            medicosSnap.forEach(doc => {
+                if (doc.data().nome.toLowerCase().includes(medicoDesejado.toLowerCase())) {
+                    medicoEncontrado = doc.data();
+                }
             });
+
+            if (medicoEncontrado && medicoEncontrado.diasAtendimento && medicoEncontrado.diasAtendimento.length > 0) {
+                if (!medicoEncontrado.diasAtendimento.includes(diaSemana)) {
+                    const mapDias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                    const diasAtende = medicoEncontrado.diasAtendimento.map(d => mapDias[d]).join(', ');
+                    return JSON.stringify({ 
+                        erro: `O médico ${medicoEncontrado.nome} não atende nesse dia da semana. Ele atende nos seguintes dias: ${diasAtende}. Peça ao paciente para escolher outro dia.`
+                    });
+                }
+            }
+        } else {
+            // Se não especificou médico e for fim de semana, por segurança bloqueia, mas o ideal é o LLM focar no médico
+            if (diaSemana === 0 || diaSemana === 6) {
+                return JSON.stringify({ 
+                    erro: "Por favor, para agendar finais de semana especifique o nome do médico para eu validar se ele atende."
+                });
+            }
         }
 
         // Criar Grade de 30 em 30 minutos
@@ -351,7 +393,7 @@ exports.handleWebhookPost = async (req, res) => {
         ).filter(m => !m.tool_calls); // Remove assistant messages que tinham tool_calls
 
         let messages = [
-            { role: 'system', content: getSystemPrompt() },
+            { role: 'system', content: await getSystemPrompt() },
             ...safeHistory
         ];
         

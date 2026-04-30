@@ -39,17 +39,35 @@ function getSystemPrompt() {
 
 ## Seu papel principal: Atuar como Secretária Completa
 - Pergunte qual a especialidade médica que o paciente procura.
+- Informe o médico responsável e o valor da consulta ANTES de agendar.
 - Pergunte por uma preferência de data e **use a ferramenta "obter_horarios_disponiveis"** para fornecer a ele opções reais de horários livres não agendados.
 - Se o paciente escolher um horário, **use a ferramenta "agendar_consulta"** para concluir. Jamais confirme um agendamento para o usuário sem antes executar essa ferramenta com sucesso.
 - Peça o nome completo do paciente educadamente, se não possuir.
+
+## QUADRO DE MÉDICOS E VALORES
+| Médico | Especialidade | Valor |
+|---|---|---|
+| Hanna Neuro | Psicóloga | R$ 1.900,00 (pacote mínimo de 10 sessões) |
+| Dr. Andrea | Dermatologista | R$ 350,00 |
+| Dr. Erika | Clínica Geral | R$ 250,00 |
+| Yara | Nutricionista | R$ 190,00 |
+| Dr. Karen | Neurologista | R$ 350,00 |
+| Dr. Erikson | Alta Performance | R$ 500,00 |
+| Dr. Erikson | Endocrinologista | R$ 300,00 |
+| Dr. Lavínia | Clínica Geral | R$ 250,00 |
+| Daniel Guimarães | Angiologista | R$ 200,00 |
+| Mariana Leite | Neuropediatra | R$ 500,00 |
+
+**IMPORTANTE sobre Psicóloga (Hanna Neuro):** O valor de R$ 1.900,00 é um pacote fechado de no mínimo 10 sessões. Informe isso ao paciente antes de agendar.
 
 ## REGRAS DE ATENDIMENTO
 1. Não ofereça sábados ou domingos.
 2. Não atenda emergências médicas.
 3. Não fale sobre medicações ou dê diagnósticos médicos.
-4. Se o paciente responder a um lembrete confirmando (ex: "1", "sim", "confirmo") ou cancelando (ex: "2", "não", "cancelar"), use a ferramenta "confirmar_ou_cancelar_consulta" para atualizar o status.
-5. Se o paciente disser palavras como "falar com pessoa", "humano", "atendente", retorne apenas a palavra exata [ESCALAR_HUMANO].
-6. Respostas curtas, fáceis de ler, e simpáticas via WhatsApp. Max 2 parágrafos. Emojis com moderação.`;
+4. Sempre informe o nome do médico e o valor da consulta ao paciente antes de confirmar o agendamento.
+5. Se o paciente responder a um lembrete confirmando (ex: "1", "sim", "confirmo") ou cancelando (ex: "2", "não", "cancelar"), use a ferramenta "confirmar_ou_cancelar_consulta" para atualizar o status.
+6. Se o paciente disser palavras como "falar com pessoa", "humano", "atendente", retorne apenas a palavra exata [ESCALAR_HUMANO].
+7. Respostas curtas, fáceis de ler, e simpáticas via WhatsApp. Max 2 parágrafos. Emojis com moderação.`;
 }
 
 // Definição das Ferramentas
@@ -79,9 +97,11 @@ const tools = [
                     data: { type: "string", description: "Data no formato AAAA-MM-DD" },
                     hora: { type: "string", description: "Hora no formato HH:mm" },
                     nomePaciente: { type: "string", description: "Nome e sobrenome do paciente" },
-                    especialidade: { type: "string", description: "A especialidade do médico (ex: Clinico, Pediatria)" }
+                    especialidade: { type: "string", description: "A especialidade do médico (ex: Clínica Geral, Dermatologista)" },
+                    medico: { type: "string", description: "Nome do médico responsável (ex: Dr. Erika, Dr. Karen)" },
+                    valor: { type: "number", description: "Valor da consulta em reais (ex: 250)" }
                 },
-                required: ["data", "hora", "nomePaciente", "especialidade"]
+                required: ["data", "hora", "nomePaciente", "especialidade", "medico"]
             }
         }
     },
@@ -123,6 +143,20 @@ async function executeTool(name, args, phone) {
             todosHorarios.push(`${prefix}:30`);
         }
 
+        // Se for HOJE, remover horários que já passaram
+        const agoraSP = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+        const hojeSP = `${agoraSP.getFullYear()}-${String(agoraSP.getMonth() + 1).padStart(2, '0')}-${String(agoraSP.getDate()).padStart(2, '0')}`;
+        
+        if (dataBuscada === hojeSP) {
+            const horaAtual = agoraSP.getHours();
+            const minutoAtual = agoraSP.getMinutes();
+            todosHorarios = todosHorarios.filter(slot => {
+                const [h, m] = slot.split(':').map(Number);
+                // Só mostrar horários pelo menos 30 min à frente
+                return (h > horaAtual) || (h === horaAtual && m > minutoAtual + 30);
+            });
+        }
+
         // Buscar Agendados do banco de dados na mesma "data"
         const snapshot = await db.collection('agendamentos').where('data', '==', dataBuscada).get();
         const horariosOcupados = snapshot.docs.map(doc => doc.data().hora);
@@ -132,7 +166,7 @@ async function executeTool(name, args, phone) {
 
         return JSON.stringify({
             dataPesquisada: dataBuscada,
-            horariosLivres: disponiveis.length > 0 ? disponiveis : "Não há vagas para este dia."
+            horariosLivres: disponiveis.length > 0 ? disponiveis : "Não há mais vagas para este dia."
         });
     }
 
@@ -144,8 +178,10 @@ async function executeTool(name, args, phone) {
                 data: args.data,
                 hora: args.hora,
                 especialidade: args.especialidade,
+                medico: args.medico || '',
+                valor: args.valor || 0,
                 origem: 'WHATSAPP_IA',
-                status: 'CONFIRMADO', // Salva já oficial
+                status: 'CONFIRMADO',
                 dataCriacao: admin.firestore.FieldValue.serverTimestamp()
             });
             return JSON.stringify({ sucesso: true, avisoAoBot: "A consulta foi gravada com segurança no banco. Confirme com o paciente!" });

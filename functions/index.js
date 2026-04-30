@@ -1,4 +1,5 @@
 const functions = require('firebase-functions');
+const { onRequest } = require('firebase-functions/v2/https');
 const express = require('express');
 const cors = require('cors');
 const { handleWebhookGet, handleWebhookPost } = require('./whatsappBot');
@@ -20,5 +21,10 @@ app.use((req, res, next) => {
 app.get('/webhook*', handleWebhookGet);
 app.post('/webhook*', handleWebhookPost);
 
-// Expose Express API as a single Cloud Function:
-exports.whatsapp = functions.https.onRequest(app);
+// Expose Express API as a single Cloud Function (Gen 2):
+// minInstances=1 evita cold start (resposta quase instantânea)
+exports.whatsapp = onRequest({
+    timeoutSeconds: 120,
+    memory: '256MiB',
+    minInstances: 1,
+}, app);

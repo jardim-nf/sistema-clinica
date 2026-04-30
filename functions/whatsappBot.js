@@ -345,9 +345,14 @@ exports.handleWebhookPost = async (req, res) => {
             return;
         }
 
+        // Filtra histórico: remove mensagens de tool/tool_call que podem conflitar com schema atualizado
+        const safeHistory = (sessionData.history || []).filter(m => 
+            m.role === 'user' || m.role === 'assistant'
+        ).filter(m => !m.tool_calls); // Remove assistant messages que tinham tool_calls
+
         let messages = [
             { role: 'system', content: getSystemPrompt() },
-            ...(sessionData.history || [])
+            ...safeHistory
         ];
         
         messages.push({ role: 'user', content: `[${pushName}]: ${text}` });
@@ -421,5 +426,14 @@ exports.handleWebhookPost = async (req, res) => {
         
     } catch (error) {
         console.error('Erro na integração OpenAI/Uazapi:', error.message);
+        console.error('Stack:', error.stack);
+        // Limpa sessão corrompida e avisa o paciente
+        try {
+            const sessionRef2 = db.collection('whatsapp_sessions').doc(from);
+            await sessionRef2.set({ history: [], handoff: false });
+            await sendText(from, 'Desculpe, tive um probleminha técnico 😅 Pode repetir sua mensagem? Estou pronta para te atender!');
+        } catch (e2) {
+            console.error('Erro ao enviar fallback:', e2.message);
+        }
     }
 };

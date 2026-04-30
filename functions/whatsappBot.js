@@ -197,20 +197,36 @@ exports.handleWebhookPost = async (req, res) => {
     try {
         console.log('--- PAYLOAD RECEBIDO DA UAZAPI ---', JSON.stringify(req.body));
         const body = req.body;
-        const key = body?.key || body?.data?.key || {};
-        const messageData = body?.message || body?.data?.message || {};
+        const isUazapi = body?.EventType === 'messages';
+        
+        let fromMe = false;
+        let isGroup = false;
+        let from = '';
+        let pushName = 'Paciente';
+        let text = '';
 
-        if (key.fromMe || (key.remoteJid || '').includes('@g.us')) return;
+        if (isUazapi) {
+            const msg = body.message || {};
+            fromMe = msg.fromMe;
+            isGroup = msg.isGroup || (msg.chatid && msg.chatid.includes('@g.us'));
+            from = (msg.chatid || '').replace('@s.whatsapp.net', '');
+            pushName = body.chat?.wa_contactName || body.chat?.name || 'Paciente';
+            text = msg.text || '';
+        } else {
+            const key = body?.key || body?.data?.key || {};
+            const messageData = body?.message || body?.data?.message || {};
+            fromMe = key.fromMe;
+            isGroup = (key.remoteJid || '').includes('@g.us');
+            from = (key.remoteJid || '').replace('@s.whatsapp.net', '');
+            pushName = body.pushName || body.data?.pushName || 'Paciente';
+            text = messageData.conversation
+                || messageData.extendedTextMessage?.text
+                || messageData.buttonsResponseMessage?.selectedButtonId
+                || messageData.listResponseMessage?.singleSelectReply?.selectedRowId
+                || '';
+        }
 
-        const from = (key.remoteJid || '').replace('@s.whatsapp.net', '');
-        const pushName = body.pushName || body.data?.pushName || 'Paciente';
-
-        const text = messageData.conversation
-            || messageData.extendedTextMessage?.text
-            || messageData.buttonsResponseMessage?.selectedButtonId
-            || messageData.listResponseMessage?.singleSelectReply?.selectedRowId
-            || '';
-
+        if (fromMe || isGroup) return;
         if (!text.trim()) return;
 
         const sessionRef = db.collection('whatsapp_sessions').doc(from);

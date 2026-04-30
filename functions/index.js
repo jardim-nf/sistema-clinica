@@ -12,8 +12,13 @@ app.use(cors({ origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/webhook', handleWebhookGet);
-app.post('/webhook', handleWebhookPost);
+app.use((req, res, next) => {
+    console.log(`[REQ] ${req.method} ${req.url}`);
+    next();
+});
+
+app.get('/webhook*', handleWebhookGet);
+app.post('/webhook*', handleWebhookPost);
 
 // Expose Express API as a single Cloud Function:
 exports.whatsapp = functions.https.onRequest(app);

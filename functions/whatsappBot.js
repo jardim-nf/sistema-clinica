@@ -195,6 +195,7 @@ exports.handleWebhookPost = async (req, res) => {
     res.json({ status: 'ok' }); // Retorno rápido para a Uazapi
     
     try {
+        console.log('--- PAYLOAD RECEBIDO DA UAZAPI ---', JSON.stringify(req.body));
         const body = req.body;
         const key = body?.key || body?.data?.key || {};
         const messageData = body?.message || body?.data?.message || {};

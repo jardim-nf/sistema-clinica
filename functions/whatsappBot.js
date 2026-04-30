@@ -77,11 +77,15 @@ ${quadroMedicos}
 
 **IMPORTANTE sobre Psicóloga (Hanna Neuro):** O valor de R$ 1.900,00 é um pacote fechado de no mínimo 10 sessões. Informe isso ao paciente antes de agendar.
 
+## INFORMAÇÕES GERAIS DA CLÍNICA
+- Horário de funcionamento: Segunda a Sábado, das 08:00 às 18:00.
+- Chave PIX (Aleatória): 494f0a7b-747f-432d-9ab7-473c20c770b0
+
 ## REGRAS DE ATENDIMENTO
 1. Verifique os dias de atendimento do médico na tabela acima. Se o médico não atende no dia solicitado, não ofereça aquele dia.
 2. Não atenda emergências médicas.
 3. Não fale sobre medicações ou dê diagnósticos médicos.
-4. Sempre informe o nome do médico e o valor da consulta ao paciente antes de confirmar o agendamento.
+4. Sempre informe o nome do médico e o valor da consulta ao paciente antes de confirmar o agendamento. Se o paciente for pagar via PIX, você pode fornecer a chave PIX acima.
 5. Se o paciente responder a um lembrete confirmando (ex: "1", "sim", "confirmo") ou cancelando (ex: "2", "não", "cancelar"), use a ferramenta "confirmar_ou_cancelar_consulta" para atualizar o status.
 6. Se o paciente disser palavras como "falar com pessoa", "humano", "atendente", retorne apenas a palavra exata [ESCALAR_HUMANO].
 7. Respostas curtas, fáceis de ler, e simpáticas via WhatsApp. Max 2 parágrafos. Emojis com moderação.`;
@@ -169,10 +173,10 @@ async function executeTool(name, args, phone) {
                 }
             }
         } else {
-            // Se não especificou médico e for fim de semana, por segurança bloqueia, mas o ideal é o LLM focar no médico
-            if (diaSemana === 0 || diaSemana === 6) {
+            // Se não especificou médico, bloqueia o Domingo pois a clínica é fechada
+            if (diaSemana === 0) {
                 return JSON.stringify({ 
-                    erro: "Por favor, para agendar finais de semana especifique o nome do médico para eu validar se ele atende."
+                    erro: "Indisponível. A clínica não atende aos domingos. Peça ao paciente para escolher um dia de segunda a sábado."
                 });
             }
         }

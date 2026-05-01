@@ -418,6 +418,13 @@ exports.handleWebhookPost = async (req, res) => {
             return;
         }
 
+        // Comando secreto para limpar a memória do bot durante os testes
+        if (text.toLowerCase().trim() === 'limpar') {
+            await sessionRef.set({ history: [], handoff: false });
+            await sendText(from, '🧹 Memória apagada! Pode testar novamente do zero.');
+            return;
+        }
+
         // Filtra histórico: remove mensagens de tool/tool_call que podem conflitar com schema atualizado
         const safeHistory = (sessionData.history || []).filter(m => 
             m.role === 'user' || m.role === 'assistant'

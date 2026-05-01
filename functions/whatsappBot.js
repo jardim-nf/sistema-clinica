@@ -13,6 +13,7 @@ const db = admin.firestore();
 const UAZAPI_URL = process.env.UAZAPI_URL || 'https://meunumero.uazapi.com';
 const UAZAPI_TOKEN = process.env.UAZAPI_TOKEN || 'SEU_TOKEN_AQUI';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'SUA_CHAVE_OPENAI';
+const CLINICA_ID = process.env.CLINICA_ID || 'B90OlcpVjfOnTRTOgZXyYhdhtYY2'; // ID padrao da IMED
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
@@ -34,11 +35,22 @@ async function sendText(phone, message) {
 // Prompt do ChatGPT
 async function getSystemPrompt() {
     const hoje = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+    // Buscar o nome da clínica
+    let nomeDaClinica = "Clínica";
+    try {
+        const clinicSnap = await db.collection('usuarios').doc(CLINICA_ID).get();
+        if (clinicSnap.exists) {
+            nomeDaClinica = clinicSnap.data().nomeClinica || clinicSnap.data().nome || "Clínica";
+        }
+    } catch (e) {
+        console.error("Erro ao buscar nome da clinica:", e);
+    }
     
-    // Buscar médicos dinamicamente do Firestore
+    // Buscar médicos dinamicamente do Firestore (Apenas da clínica atual)
     let quadroMedicos = "| Médico | Especialidade | Telefone | Dias de Atendimento |\n|---|---|---|---|\n";
     try {
-        const snapshot = await db.collection('medicos').get();
+        const snapshot = await db.collection('medicos').where('clinicaId', '==', CLINICA_ID).get();
         const mapDias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
         snapshot.forEach(doc => {
             const data = doc.data();
@@ -53,14 +65,24 @@ async function getSystemPrompt() {
         quadroMedicos += "| Erro | Erro | Erro | Erro |\n";
     }
 
-    return `Você é a assistente virtual da clínica IdeaSaúde. Seja extremamente educada, empática e prestativa. Hoje é: ${hoje}.
+    return `Você é a assistente virtual da clínica ${nomeDaClinica}. Seja extremamente educada, empática e prestativa. Hoje é: ${hoje}.
 
-## Seu papel principal: Atuar como Secretária Completa
-- Pergunte qual a especialidade médica que o paciente procura.
-- Informe o médico responsável e o valor da consulta ANTES de agendar.
-- Pergunte por uma preferência de data e **use a ferramenta "obter_horarios_disponiveis"** para fornecer a ele opções reais de horários livres não agendados. (Lembre-se de checar na tabela abaixo se o médico atende no dia da semana solicitado).
-- Se o paciente escolher um horário, **use a ferramenta "agendar_consulta"** para concluir. Jamais confirme um agendamento para o usuário sem antes executar essa ferramenta com sucesso.
-- Peça o nome completo do paciente educadamente, se não possuir.
+## REGRAS DE OURO PARA O FLUXO DE ATENDIMENTO
+1. **Primeiro Contato (Mensagem de Saudação):** Se esta for a PRIMEIRA mensagem da conversa do paciente, você DEVE responder EXATAMENTE assim:
+"Olá, a ${nomeDaClinica} agradece o seu contato. Como posso lhe ajudar?"
+(Não pergunte mais nada nesta mensagem, aguarde a resposta do paciente).
+
+2. **Captura de Dados (Segunda Etapa):** Quando o paciente disser o que precisa (por exemplo: "quero agendar uma consulta"), você DEVE pedir os dados de cadastro dele ANTES de prosseguir. Peça de forma educada e solicitando separadamente:
+   - Nome:
+   - CPF:
+   - Data de Nascimento:
+   (Aguarde o paciente enviar esses dados antes de avançar para a próxima etapa).
+
+3. **Atendimento Clínico (Terceira Etapa):** Só inicie o processo de agendamento DEPOIS que o paciente informar os dados acima.
+   - Pergunte qual a especialidade médica que o paciente procura.
+   - Informe o médico responsável e o valor da consulta ANTES de agendar.
+   - Pergunte por uma preferência de data e **use a ferramenta "obter_horarios_disponiveis"** para fornecer a ele opções reais de horários livres não agendados. (Lembre-se de checar na tabela abaixo se o médico atende no dia da semana solicitado).
+   - Se o paciente escolher um horário, **use a ferramenta "agendar_consulta"** para concluir. Jamais confirme um agendamento para o usuário sem antes executar essa ferramenta com sucesso.
 
 ## QUADRO DE MÉDICOS, ESPECIALIDADES E DIAS DE ATENDIMENTO (DO BANCO DE DADOS)
 ${quadroMedicos}
@@ -155,7 +177,7 @@ async function executeTool(name, args, phone) {
 
         // Validar dia de atendimento do médico se informado
         if (medicoDesejado) {
-            const medicosSnap = await db.collection('medicos').get();
+            const medicosSnap = await db.collection('medicos').where('clinicaId', '==', CLINICA_ID).get();
             let medicoEncontrado = null;
             medicosSnap.forEach(doc => {
                 if (doc.data().nome.toLowerCase().includes(medicoDesejado.toLowerCase())) {
@@ -204,7 +226,10 @@ async function executeTool(name, args, phone) {
         }
 
         // Buscar Agendados do banco de dados na mesma "data"
-        const snapshot = await db.collection('agendamentos').where('data', '==', dataBuscada).get();
+        const snapshot = await db.collection('agendamentos')
+            .where('clinicaId', '==', CLINICA_ID)
+            .where('data', '==', dataBuscada)
+            .get();
         const horariosOcupados = snapshot.docs.map(doc => doc.data().hora);
 
         // Remover os ocupados
@@ -219,6 +244,7 @@ async function executeTool(name, args, phone) {
     if (name === 'agendar_consulta') {
         try {
             await db.collection('agendamentos').add({
+                clinicaId: CLINICA_ID,
                 telefone: phone,
                 nomePaciente: args.nomePaciente,
                 data: args.data,
@@ -240,6 +266,7 @@ async function executeTool(name, args, phone) {
         try {
             // Busca a consulta mais recente do paciente que ainda está pendente ou agendada
             const snapshot = await db.collection('agendamentos')
+                .where('clinicaId', '==', CLINICA_ID)
                 .where('telefone', '==', phone)
                 .where('status', 'in', ['agendado', 'pendente'])
                 .get();
@@ -453,6 +480,7 @@ exports.handleWebhookPost = async (req, res) => {
             await sessionRef.set({ ...sessionData, handoff: true });
 
             await db.collection('notificacoes').add({
+                clinicaId: CLINICA_ID,
                 tipo: 'ATENDIMENTO_WHATSAPP',
                 telefone: from,
                 nome: pushName,
